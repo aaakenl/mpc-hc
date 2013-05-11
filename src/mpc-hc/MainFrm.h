@@ -150,7 +150,8 @@ class CMainFrame : public CFrameWnd, public CDropTarget
         TIMER_STATS,
         TIMER_LEFTCLICK,
         TIMER_STATUSERASER,
-        TIMER_DVBINFO_UPDATER
+        TIMER_DVBINFO_UPDATER,
+		TIMER_MOUSEHIDER
     };
     enum {
         SEEK_DIRECTION_NONE,
