@@ -8,19 +8,20 @@ Legend:
 ! Fixed
 
 
-1.6.7 - not released yet
+1.6.8 - not released yet
 ========================
-+ Ticket #2987, Playlist improvements:
-  - Scroll and select the first newly added item
-  - Put MPC-HC on top and give the focus to the playlist after a drag and drop
-* Updated Catalan, Czech, German, Greek and Turkish translations
-* Updated Little CMS to v2.5 (git b58cb85)
-* Ticket #2689,  Replace "On top > Never" by "On top > Default". In most of the
-  cases "On top > Default" will have the exact same behavior than "On top > Never"
-  but it won't try to override the "on top" flag if an external tool sets it
-! Fix a crash when VMR-7 (renderless) renderer failed to load
-! SSA subtitles rendering: Improve error checking to avoid possible crashes when
-  the SSA script was using obviously wrong values
-! Ticket #2991, Fix loading of MicroDVD subtitles
-! Ticket #3001, "After Playback": Always give "Once" events a higher priority
-  than "Always" events
+* Updated Basque, German, Greek, Japanese, Russian, Simplified / Traditional Chinese
+  and Turkish translations
+* Updated Little CMS to v2.5 (git c0d4611)
+* Updated zlib to v1.2.8
+* Updated Unrar to v5.0.3
+* Audio Switcher improvements:
+  - Ticket #1936, Improve the normalization algorithm to avoid huge volume variations
+  - Use percentage for the boost setting since it is easier to understand for most people
+  - Add a setting to change the max normalization factor and use a default max normalization
+    factor of 4 instead of 10
+! PGS and DVB subtitles: Fix missing subtitles after resizing the window when using
+  the subpicture queue
+! Ticket #3110, DVB: Improve compatibility with some drivers for which MPC-HC failed to find
+  any channel during the channel scan
+! Ticket #3113, MPC-HC was sometimes slow to close (audio kept playing for a few seconds)

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -30,7 +30,7 @@ CVobSubImage::CVobSubImage()
     fForced = false;
     start = delay = 0;
     rect = CRect(0, 0, 0, 0);
-    lpPixels = lpTemp1 = lpTemp2 = NULL;
+    lpPixels = lpTemp1 = lpTemp2 = nullptr;
     org = CSize(0, 0);
 }
 
@@ -45,7 +45,7 @@ bool CVobSubImage::Alloc(int w, int h)
     // wide border around the text, that's why we need a bit more memory
     // to be allocated.
 
-    if (lpTemp1 == NULL || w * h > org.cx * org.cy || (w + 2) * (h + 2) > (org.cx + 2) * (org.cy + 2)) {
+    if (lpTemp1 == nullptr || w * h > org.cx * org.cy || (w + 2) * (h + 2) > (org.cx + 2) * (org.cy + 2)) {
         Free();
 
         lpTemp1 = DEBUG_NEW RGBQUAD[w * h];
@@ -56,7 +56,7 @@ bool CVobSubImage::Alloc(int w, int h)
         lpTemp2 = DEBUG_NEW RGBQUAD[(w + 2) * (h + 2)];
         if (!lpTemp2) {
             delete [] lpTemp1;
-            lpTemp1 = NULL;
+            lpTemp1 = nullptr;
             return false;
         }
 
@@ -74,7 +74,7 @@ void CVobSubImage::Free()
     SAFE_DELETE_ARRAY(lpTemp1);
     SAFE_DELETE_ARRAY(lpTemp2);
 
-    lpPixels = NULL;
+    lpPixels = nullptr;
 }
 
 bool CVobSubImage::Decode(BYTE* lpData, int packetsize, int datasize,
@@ -354,17 +354,17 @@ CAutoPtrList<COutline>* CVobSubImage::GetOutlineList(CPoint& topleft)
 {
     int w = rect.Width(), h = rect.Height(), len = w * h;
     if (len <= 0) {
-        return NULL;
+        return nullptr;
     }
 
     CAutoVectorPtr<BYTE> p;
     if (!p.Allocate(len)) {
-        return NULL;
+        return nullptr;
     }
 
     CAutoPtrList<COutline>* ol = DEBUG_NEW CAutoPtrList<COutline>();
     if (!ol) {
-        return NULL;
+        return nullptr;
     }
 
     BYTE* cp = p;
@@ -402,7 +402,7 @@ CAutoPtrList<COutline>* CVobSubImage::GetOutlineList(CPoint& topleft)
             break;
         }
 
-        int prevdir, dir = UP;
+        int dir = UP;
 
         int ox = x, oy = y, odir = dir;
 
@@ -417,7 +417,7 @@ CAutoPtrList<COutline>* CVobSubImage::GetOutlineList(CPoint& topleft)
             BYTE fr = 0;
             BYTE br = 0;
 
-            prevdir = dir;
+            int prevdir = dir;
 
             switch (prevdir) {
                 case UP:
@@ -516,7 +516,7 @@ CAutoPtrList<COutline>* CVobSubImage::GetOutlineList(CPoint& topleft)
             }
         } while (!(x == ox && y == oy && dir == odir));
 
-        if (o->pa.GetCount() > 0 && (x == ox && y == oy && dir == odir)) {
+        if (!o->pa.IsEmpty() && (x == ox && y == oy && dir == odir)) {
             ol->AddTail(o);
         } else {
             ASSERT(0);
@@ -584,10 +584,10 @@ static bool FitLine(COutline& o, int& start, int& end)
     if (fl && fr && 1.0 * (end - start) / ((len - end) * 2 + (start - 0) * 2) > 0.4) {
         return false;    // if this section is relatively too small it may only be a rounded corner
     }
-    if (!fl && la.GetSize() > 0 && la.GetSize() <= 4 && (la[0] == 1 && la[la.GetSize() - 1] == 1)) {
+    if (!fl && !la.IsEmpty() && la.GetSize() <= 4 && (la[0] == 1 && la[la.GetSize() - 1] == 1)) {
         return false;    // one step at both ends, doesn't sound good for a line (may be it was skewed, so only eliminate smaller sections where beziers going to look just as good)
     }
-    if (!fr && ra.GetSize() > 0 && ra.GetSize() <= 4 && (ra[0] == 1 && ra[ra.GetSize() - 1] == 1)) {
+    if (!fr && !ra.IsEmpty() && ra.GetSize() <= 4 && (ra[0] == 1 && ra[ra.GetSize() - 1] == 1)) {
         return false;    // -''-
     }
 
@@ -1125,7 +1125,7 @@ void CVobSubImage::AddSegment(COutline& o, CAtlArray<BYTE>& pathTypes, CAtlArray
 bool CVobSubImage::Polygonize(CAtlArray<BYTE>& pathTypes, CAtlArray<CPoint>& pathPoints, bool fSmooth, int scale)
 {
     CPoint topleft;
-    CAutoPtr<CAutoPtrList<COutline> > ol(GetOutlineList(topleft));
+    CAutoPtr<CAutoPtrList<COutline>> ol(GetOutlineList(topleft));
     if (!ol) {
         return false;
     }

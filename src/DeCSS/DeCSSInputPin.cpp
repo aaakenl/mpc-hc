@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -62,7 +62,7 @@ STDMETHODIMP CDeCSSInputPin::Receive(IMediaSample* pSample)
 {
     long len = pSample->GetActualDataLength();
 
-    BYTE* p = NULL;
+    BYTE* p = nullptr;
     if (SUCCEEDED(pSample->GetPointer(&p)) && len > 0) {
         if (m_mt.majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && len == 2048 && (p[0x14] & 0x30)) {
             CSSdescramble(p, m_TitleKey);
@@ -170,7 +170,7 @@ void CDeCSSInputPin::StripPacket(BYTE*& p, long& len)
             }
 
             if (expected > 0) {
-                expected -= (p - p0);
+                expected -= (int)(p - p0);
                 len = min(expected, len);
             }
         }

@@ -157,6 +157,10 @@ BOOL CPPageFormats::OnInitDialog()
     m_mf = s.m_Formats;
 
     for (int i = 0, cnt = (int)m_mf.GetCount(); i < cnt; i++) {
+        if (!m_mf[i].IsAssociable()) {
+            continue;
+        }
+
         CString label;
         label.Format(_T("%s (%s)"), m_mf[i].GetDescription(), m_mf[i].GetExts());
 
@@ -324,7 +328,7 @@ BOOL CPPageFormats::OnApply()
         s.m_Formats = m_mf;
         s.fAssociatedWithIcons = !!m_fAssociatedWithIcons.GetCheck();
 
-        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
     }
 
     return __super::OnApply();
@@ -513,6 +517,10 @@ void CPPageFormats::OnBnClickedResetExtensionsList()
         mfc.RestoreDefaultExts();
         m_exts = mfc.GetExtsWithPeriod();
 
+        CString label;
+        label.Format(_T("%s (%s)"), mfc.GetDescription(), mfc.GetExts());
+        m_list.SetItemText(iItem, COL_CATEGORY, label);
+
         UpdateMediaCategoryState(iItem);
         UpdateData(FALSE);
 
@@ -532,6 +540,10 @@ void CPPageFormats::OnBnClickedSetExtensionsList()
 
         mfc.SetExts(m_exts);
         m_exts = mfc.GetExtsWithPeriod();
+
+        CString label;
+        label.Format(_T("%s (%s)"), mfc.GetDescription(), mfc.GetExts());
+        m_list.SetItemText(iItem, COL_CATEGORY, label);
 
         UpdateMediaCategoryState(iItem);
         UpdateData(FALSE);

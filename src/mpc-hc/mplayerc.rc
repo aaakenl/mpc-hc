@@ -116,21 +116,26 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "Enable built-in audio switcher filter (requires restart)",IDC_CHECK2,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,5,286,8
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,17,284,1
-    CONTROL         "Normalize",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,5,21,68,8
-    CONTROL         "Regain volume",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,77,21,111,8
-    LTEXT           "Boost:",IDC_STATIC,5,35,55,8
-    CONTROL         "",IDC_SLIDER1,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,60,32,110,15
-    CONTROL         "Down-sample to 44100 Hz",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,51,286,8
-    CONTROL         "Audio time shift (ms):",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,65,115,8
-    EDITTEXT        IDC_EDIT2,124,63,46,13,ES_AUTOHSCROLL,WS_EX_RIGHT
-    CONTROL         "",IDC_SPIN2,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_HOTTRACK,158,63,12,13
-    CONTROL         "Enable custom channel mapping",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,79,286,8
-    LTEXT           "Speaker configuration for ",IDC_STATIC1,5,93,115,8
-    EDITTEXT        IDC_EDIT1,124,91,29,13,ES_CENTER | ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_HOTTRACK,141,91,12,13
-    LTEXT           "input channels:",IDC_STATIC2,157,93,134,8
-    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,5,107,286,117
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,17,286,1
+    GROUPBOX        "",IDC_STATIC,5,20,286,25
+    CONTROL         "Normalize",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,15,21,68,8
+    LTEXT           "Max amplification:",IDC_STATIC4,12,31,110,8
+    EDITTEXT        IDC_EDIT3,124,29,36,13,ES_AUTOHSCROLL | ES_NUMBER,WS_EX_RIGHT
+    CONTROL         "",IDC_SPIN3,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_HOTTRACK,148,29,12,13
+    LTEXT           "%",IDC_STATIC5,162,31,12,8
+    CONTROL         "Regain volume",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,31,108,8
+    LTEXT           "Boost:",IDC_STATIC6,5,49,55,8
+    CONTROL         "",IDC_SLIDER1,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,60,46,110,15
+    CONTROL         "Down-sample to 44100 Hz",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,65,286,8
+    CONTROL         "Audio time shift (ms):",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,79,115,8
+    EDITTEXT        IDC_EDIT2,124,77,46,13,ES_AUTOHSCROLL,WS_EX_RIGHT
+    CONTROL         "",IDC_SPIN2,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_HOTTRACK,158,77,12,13
+    CONTROL         "Enable custom channel mapping",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,93,286,8
+    LTEXT           "Speaker configuration for ",IDC_STATIC1,5,107,115,8
+    EDITTEXT        IDC_EDIT1,124,105,29,13,ES_CENTER | ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_HOTTRACK,141,105,12,13
+    LTEXT           "input channels:",IDC_STATIC2,157,107,134,8
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,5,121,286,103
     CTEXT           "Hold shift for immediate changes when clicking something ",IDC_STATIC3,5,228,286,8
 END
 
@@ -362,7 +367,7 @@ BEGIN
     CONTROL         "RealMedia",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,198,50,8
     CONTROL         "QuickTime",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,64,198,50,8
     CONTROL         "DirectShow",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,118,198,50,8
-    CONTROL         "Look file extension first",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,173,198,115,8
+    CONTROL         "Check file extension first",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,173,198,115,8
     GROUPBOX        "Explorer Context Menu",IDC_STATIC,5,213,118,24
     CONTROL         "Directory",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,225,50,8
     CONTROL         "File(s)",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,225,55,8
@@ -880,9 +885,9 @@ BEGIN
     CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_HOTTRACK,150,129,13,14
     LTEXT           "day(s)",IDC_STATIC,155,131,50,8
     GROUPBOX        "Settings management",IDC_STATIC,5,151,286,28
-    PUSHBUTTON      "Reset",IDC_RESET_SETTINGS,10,161,75,14
-    PUSHBUTTON      "Export",IDC_EXPORT_SETTINGS,95,161,75,14
-    PUSHBUTTON      "Export keys",IDC_EXPORT_KEYS,180,161,75,14
+    PUSHBUTTON      "Reset",IDC_RESET_SETTINGS,10,161,86,14
+    PUSHBUTTON      "Export",IDC_EXPORT_SETTINGS,200,161,86,14
+    PUSHBUTTON      "Export keys",IDC_EXPORT_KEYS,105,161,86,14
 END
 
 IDD_TUNER_SCAN DIALOGEX 0, 0, 407, 246
@@ -2306,9 +2311,9 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_VOLUME_MUTE          "Mute\nMute"
-    ID_VOLUME_MUTE_ON       "Unmute\nUnmute"
-    ID_VOLUME_MUTE_DISABLED "No audio\nNo audio"
+    ID_VOLUME_MUTE          "Mute"
+    ID_VOLUME_MUTE_ON       "Unmute"
+    ID_VOLUME_MUTE_DISABLED "No audio"
 END
 
 STRINGTABLE
@@ -2569,7 +2574,7 @@ BEGIN
     IDS_VDF_DXVA_SKIP_ALLCHECK "Skip all checks"
     IDS_FAVORITES_QUICKADDFAVORITE "Quick add favorite"
     IDS_VDF_DXVA_SD         "Disable DXVA for SD (H.264)"
-    IDS_MPEG2DECSETTINGSWND_3 "Read AR from stream"
+    IDS_MPEG2_READ_AR       "Read AR from stream"
 END
 
 STRINGTABLE
@@ -2591,8 +2596,7 @@ BEGIN
     IDS_MPEG2_CONTRAST      "Contrast"
     IDS_MPEG2_HUE           "Hue"
     IDS_MPEG2_SATURATION    "Saturation"
-    IDS_MPEG2DECSETTINGSWND_8
-                            "can degrade performance. ""Auto"" deinterlacer will switch to ""Blend"" when necessary."
+    IDS_MPEG2_NOTE2         "can degrade performance. ""Auto"" deinterlacer will switch to ""Blend"" when necessary."
     IDS_ADD_TO_PLAYLIST     "Add to MPC-HC Playlist"
     IDS_OPEN_WITH_MPC       "Play with MPC-HC"
     IDS_CANNOT_CHANGE_FORMAT
@@ -2675,7 +2679,7 @@ BEGIN
     IDS_PPSDB_BADURL        "Bad URL, could not locate subtitle database there!"
     IDS_AG_CHAPTER2         "Chapter: "
     IDS_VOLUME_OSD          "Vol: %d%%"
-    IDS_BOOST_OSD           "Boost: +%.1f dB"
+    IDS_BOOST_OSD           "Boost: +%u%%"
     IDS_BALANCE_OSD         "Balance: %s"
     IDS_FULLSCREENMONITOR_CURRENT "Current"
     IDS_MPC_CRASH           "MPC-HC terminated unexpectedly. To help us fix this problem, please send this file ""%s"" to our bug tracker.\n\nDo you want to open the folder containing the minidump file and visit the bug tracker now?"
@@ -2764,15 +2768,13 @@ BEGIN
     IDS_MPADEC_MONO         "Mono"
     IDS_MPADEC_STEREO       "Stereo"
     IDS_MPADEC_SPDIF        "Pass-through (S/PDIF, HDMI)"
-    IDS_MPEG2DECSETTINGSWND_0
-                            "Enable planar YUV media types (VY12, I420, IYUY)"
-    IDS_MPEG2DECSETTINGSWND_1 "Set interlaced flag in output media type"
-    IDS_MPEG2DECSETTINGSWND_2 "Always display forced subtitles"
+    IDS_MPEG2_ENABLE_PLANAR "Enable planar YUV media types (VY12, I420, IYUY)"
+    IDS_MPEG2_INTERLACE_FLAG "Set interlaced flag in output media type"
+    IDS_MPEG2_FORCED_SUBS   "Always display forced subtitles"
     IDS_MPEG2_DEINTERLACING "Deinterlacing"
     IDS_MPEG2_BRIGHTNESS    "Brightness"
     IDS_MPEG2_RESET         "Reset"
-    IDS_MPEG2DECSETTINGSWND_7
-                            "Note: Using a non-planar output format, bob deinterlacer, or adjusting color properies "
+    IDS_MPEG2_NOTE1         "Note: Using a non-planar output format, bob deinterlacer, or adjusting color properies "
 END
 
 STRINGTABLE
@@ -2785,13 +2787,12 @@ BEGIN
     IDS_VDF_DBLK_BIDIR      "Bidirectional"
     IDS_VDF_DBLK_NONKFRM    "Non keyframes"
     IDS_VDF_DBLK_ALL        "All frames"
-    IDS_VDF_IDCT_AUTO       "Auto"
+    IDS_VDF_AUTO            "Auto"
 END
 
 STRINGTABLE
 BEGIN
     IDS_VDF_INTERLACED_FLAG         "Force the interlaced flag"
-    IDS_VDF_IF_AUTO                 "Auto"
     IDS_VDF_IF_PROGRESSIVE          "Progressive"
     IDS_VDF_IF_TOP_FIELD_FIRST      "Top field first"
     IDS_VDF_IF_BOTTOM_FIELD_FIRST   "Bottom field first"
@@ -2964,23 +2965,28 @@ STRINGTABLE
 BEGIN
     IDS_MFMT_PLS                "Playlist"
     IDS_MFMT_BDPLS              "Blu-ray playlist"
+    IDS_MFMT_RAR                "RAR Archive"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DVB_CHANNEL_NUMBER      "N"
-    IDS_DVB_CHANNEL_NAME        "Name"
-    IDS_DVB_CHANNEL_FREQUENCY   "Frequency"
-    IDS_DVB_CHANNEL_ENCRYPTION  "Encrypted"
-    IDS_DVB_CHANNEL_ENCRYPTED   "Yes"
+    IDS_DVB_CHANNEL_NUMBER        "N"
+    IDS_DVB_CHANNEL_NAME          "Name"
+    IDS_DVB_CHANNEL_FREQUENCY     "Frequency"
+    IDS_DVB_CHANNEL_ENCRYPTION    "Encrypted"
+    IDS_DVB_CHANNEL_ENCRYPTED     "Yes"
     IDS_DVB_CHANNEL_NOT_ENCRYPTED "No"
-    IDS_DVB_CHANNEL_START_SCAN  "Start"
-    IDS_DVB_CHANNEL_STOP_SCAN   "Stop"
-    IDS_DVB_TVNAV_SEERADIO      "Radio stations"
-    IDS_DVB_TVNAV_SEETV         "TV stations"
-    IDS_ARS_WASAPI_MODE         "Use WASAPI (restart playback)"
-    IDS_ARS_MUTE_FAST_FORWARD   "Mute on fast forward"
-    IDS_ARS_SOUND_DEVICE        "Sound Device:"
+    IDS_DVB_CHANNEL_FORMAT        "Format"
+    IDS_DVB_CHANNEL_FPS           "FPS"
+    IDS_DVB_CHANNEL_RESOLUTION    "Resolution"
+    IDS_DVB_CHANNEL_ASPECT_RATIO  "Aspect Ratio"
+    IDS_DVB_CHANNEL_START_SCAN    "Start"
+    IDS_DVB_CHANNEL_STOP_SCAN     "Stop"
+    IDS_DVB_TVNAV_SEERADIO        "Radio stations"
+    IDS_DVB_TVNAV_SEETV           "TV stations"
+    IDS_ARS_WASAPI_MODE           "Use WASAPI (restart playback)"
+    IDS_ARS_MUTE_FAST_FORWARD     "Mute on fast forward"
+    IDS_ARS_SOUND_DEVICE          "Sound Device:"
 END
 
 STRINGTABLE
@@ -3256,6 +3262,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_FILTER_SETTINGS_CAPTION         "Settings"
     IDS_AVISPLITTER_NON_INTERLEAVED     "Non interleaved files support"
 END
 

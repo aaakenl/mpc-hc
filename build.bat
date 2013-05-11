@@ -285,7 +285,7 @@ FOR %%G IN ("Armenian" "Basque" "Belarusian" "Catalan" "Chinese Simplified"
  /target:%BUILDTYPE% /property:Configuration="Release %%~G";Platform=%1
  IF %ERRORLEVEL% NEQ 0 CALL :SubMsg "ERROR" "Compilation failed!" & EXIT /B
 )
-IF /I "%SIGN%" == "True" CALL :SubSign MPC-HC Lang\mpcresources.??.dll
+IF /I "%SIGN%" == "True" CALL :SubSign MPC-HC mpcresources.??.dll Lang
 EXIT /B
 
 
@@ -293,15 +293,17 @@ EXIT /B
 IF %ERRORLEVEL% NEQ 0 EXIT /B
 REM %1 is Filters or MPC-HC
 REM %2 is name of the file to sign
+REM %3 is the subfolder
 
-IF /I "%PPLATFORM%" == "Win32" PUSHD "%BIN_DIR%\%~1_x86"
-IF /I "%PPLATFORM%" == "x64"   PUSHD "%BIN_DIR%\%~1_x64"
-CALL "..\..\contrib\sign.bat" "%2"
-IF %ERRORLEVEL% NEQ 0 (
-  CALL :SubMsg "ERROR" "Problem signing %2"
-) ELSE (
-  CALL :SubMsg "INFO" "%2 signed successfully."
+IF /I "%PPLATFORM%" == "Win32" PUSHD "%BIN_DIR%\%~1_x86\%3"
+IF /I "%PPLATFORM%" == "x64"   PUSHD "%BIN_DIR%\%~1_x64\%3"
+
+FOR /F "delims=" %%A IN ('DIR "%2" /b') DO (
+  CALL "%~dp0contrib\sign.bat" "%%A" || (CALL :SubMsg "ERROR" "Problem signing %%A" & GOTO Break)
 )
+CALL :SubMsg "INFO" "%2 signed successfully."
+
+:Break
 POPD
 EXIT /B
 
@@ -364,8 +366,8 @@ IF /I "%~2" == "Win32" (
 PUSHD "%BIN_DIR%"
 
 SET "PCKG_NAME=%NAME%.%MPCHC_VER%.%ARCH%"
-IF /I "%COMPILER%" == "VS2012" (SET "PCKG_NAME=%PCKG_NAME%.%COMPILER%")
 IF DEFINED MPCHC_LITE (SET "PCKG_NAME=%PCKG_NAME%.Lite")
+IF /I "%COMPILER%" == "VS2012" (SET "PCKG_NAME=%PCKG_NAME%.%COMPILER%")
 
 IF EXIST "%PCKG_NAME%.7z"     DEL "%PCKG_NAME%.7z"
 IF EXIST "%PCKG_NAME%.pdb.7z" DEL "%PCKG_NAME%.pdb.7z"
@@ -435,6 +437,10 @@ FOR /F "tokens=2,3,4 delims=(" %%A IN ('FINDSTR /L /C:"define MPC_VERSION_REV_FU
   SET "MPC_VERSION_REV=%%A" & SET "MPCHC_HASH=%%B" & SET "MPCHC_BRANCH=%%C"
 )
 
+FOR /F "tokens=3" %%A IN ('FINDSTR /R /C:"define MPC_BETA_RELEASE" "include\version.h"') DO (
+  SET "MPCHC_BETA=%%A"
+)
+
 SET "MPC_VERSION_REV=%MPC_VERSION_REV:~1,-1%"
 IF "%MPCHC_BRANCH%" NEQ "" (
   SET "MPCHC_HASH=%MPCHC_HASH:~0,-2%"
@@ -442,7 +448,12 @@ IF "%MPCHC_BRANCH%" NEQ "" (
 ) ELSE (
   SET "MPCHC_HASH=%MPCHC_HASH:~0,-3%"
 )
-SET "MPCHC_VER=%MPC_VERSION_MAJOR%.%MPC_VERSION_MINOR%.%MPC_VERSION_PATCH%.%MPC_VERSION_REV%"
+
+IF "%MPCHC_BETA%" NEQ "0" (
+  SET "MPCHC_VER=%MPC_VERSION_MAJOR%.%MPC_VERSION_MINOR%.%MPC_VERSION_PATCH%.%MPC_VERSION_REV%"
+) ELSE (
+  SET "MPCHC_VER=%MPC_VERSION_MAJOR%.%MPC_VERSION_MINOR%.%MPC_VERSION_PATCH%"
+)
 EXIT /B
 
 

@@ -101,7 +101,7 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
     const int h25 = IPP_SCALE(25);
     DWORD dwStyle = WS_VISIBLE | WS_CHILD | WS_TABSTOP;
     CPoint p(10, 10);
-    GUID* DxvaGui = NULL;
+    GUID* DxvaGui = nullptr;
 
 #if HAS_FFMPEG_VIDEO_DECODERS
     m_grpFFMpeg.Create(ResStr(IDS_VDF_FFSETTINGS), WS_VISIBLE | WS_CHILD | BS_GROUPBOX, CRect(p + CPoint(-5, 0), CSize(IPP_SCALE(350), h20 + h25 * 3 + h20)), this, (UINT)IDC_STATIC);
@@ -110,7 +110,7 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
     // Decoding threads
     m_txtThreadNumber.Create(ResStr(IDS_VDF_THREADNUMBER), WS_VISIBLE | WS_CHILD, CRect(p, CSize(IPP_SCALE(220), m_fontheight)), this, (UINT)IDC_STATIC);
     m_cbThreadNumber.Create(dwStyle | CBS_DROPDOWNLIST | WS_VSCROLL, CRect(p + CPoint(IPP_SCALE(230), -4), CSize(IPP_SCALE(110), 200)), this, IDC_PP_THREAD_COUNT);
-    m_cbThreadNumber.AddString(ResStr(IDS_VDF_IDCT_AUTO));
+    m_cbThreadNumber.AddString(ResStr(IDS_VDF_AUTO));
     CString ThreadNumberStr;
     for (int i = 0; i < 16; i++) {
         ThreadNumberStr.Format(_T("%d"), i + 1);
@@ -140,7 +140,7 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
     // Interlaced flag
     m_txtInterlacedFlag.Create(ResStr(IDS_VDF_INTERLACED_FLAG), WS_VISIBLE | WS_CHILD, CRect(p, CSize(IPP_SCALE(220), m_fontheight)), this, (UINT)IDC_STATIC);
     m_cbInterlacedFlag.Create(dwStyle | CBS_DROPDOWNLIST | WS_VSCROLL, CRect(p + CPoint(IPP_SCALE(230), -6), CSize(IPP_SCALE(110), 200)), this, IDC_PP_INTERLACED_FLAG);
-    m_cbInterlacedFlag.AddString(ResStr(IDS_VDF_IF_AUTO));
+    m_cbInterlacedFlag.AddString(ResStr(IDS_VDF_AUTO));
     m_cbInterlacedFlag.AddString(ResStr(IDS_VDF_IF_PROGRESSIVE));
     m_cbInterlacedFlag.AddString(ResStr(IDS_VDF_IF_TOP_FIELD_FIRST));
     m_cbInterlacedFlag.AddString(ResStr(IDS_VDF_IF_BOTTOM_FIELD_FIRST));
@@ -174,7 +174,7 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
     m_edtVideoCardDescription.SetWindowText(m_pMDF->GetVideoCardDescription());
 
     DxvaGui = m_pMDF->GetDXVADecoderGuid();
-    if (DxvaGui != NULL) {
+    if (DxvaGui != nullptr) {
         CString DXVAMode = GetDXVAMode(DxvaGui);
         m_edtDXVAMode.SetWindowText(DXVAMode);
     } else {

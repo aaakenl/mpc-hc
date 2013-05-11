@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -165,10 +165,9 @@ void CPPageAccelTbl::SetupList()
         m_list.SetItemText(row, COL_RMREPCNT, repcnt);
     }
 
-    int contentSize;
     for (int nCol = COL_CMD; nCol <= COL_RMREPCNT; nCol++) {
         m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE);
-        contentSize = m_list.GetColumnWidth(nCol);
+        int contentSize = m_list.GetColumnWidth(nCol);
         m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE_USEHEADER);
         if (contentSize > m_list.GetColumnWidth(nCol)) {
             m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE);
@@ -1751,7 +1750,7 @@ void CPPageAccelTbl::OnEndlabeleditList(NMHDR* pNMHDR, LRESULT* pResult)
             break;
         case COL_RMREPCNT:
             CString str = CString(pItem->pszText).Trim();
-            wc.rmrepcnt = _tcstol(str, NULL, 10);
+            wc.rmrepcnt = _tcstol(str, nullptr, 10);
             str.Format(_T("%d"), wc.rmrepcnt);
             m_list.SetItemText(pItem->iItem, pItem->iSubItem, str);
             *pResult = TRUE;
@@ -1767,10 +1766,12 @@ void CPPageAccelTbl::OnTimer(UINT_PTR nIDEvent)
 {
     UpdateData();
 
+    CAppSettings& s = AfxGetAppSettings();
+
     if (m_fWinLirc) {
         CString addr;
         m_WinLircEdit.GetWindowText(addr);
-        AfxGetAppSettings().WinLircClient.Connect(addr);
+        s.WinLircClient.Connect(addr);
     }
 
     m_WinLircEdit.Invalidate();
@@ -1778,7 +1779,7 @@ void CPPageAccelTbl::OnTimer(UINT_PTR nIDEvent)
     if (m_fUIce) {
         CString addr;
         m_UIceEdit.GetWindowText(addr);
-        AfxGetAppSettings().UIceClient.Connect(addr);
+        s.UIceClient.Connect(addr);
     }
 
     m_UIceEdit.Invalidate();
@@ -1792,12 +1793,13 @@ HBRUSH CPPageAccelTbl::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
     HBRUSH hbr = __super::OnCtlColor(pDC, pWnd, nCtlColor);
 
+    const CAppSettings& s = AfxGetAppSettings();
     int status = -1;
 
     if (*pWnd == m_WinLircEdit) {
-        status = AfxGetAppSettings().WinLircClient.GetStatus();
+        status = s.WinLircClient.GetStatus();
     } else if (*pWnd == m_UIceEdit) {
-        status = AfxGetAppSettings().UIceClient.GetStatus();
+        status = s.UIceClient.GetStatus();
     }
 
     if (status == 0 || status == 2 && (m_counter & 1)) {
@@ -1811,7 +1813,7 @@ HBRUSH CPPageAccelTbl::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 BOOL CPPageAccelTbl::OnSetActive()
 {
-    SetTimer(1, 1000, NULL);
+    SetTimer(1, 1000, nullptr);
 
     return CPPageBase::OnSetActive();
 }

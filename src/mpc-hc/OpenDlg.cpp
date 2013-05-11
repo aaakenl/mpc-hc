@@ -29,7 +29,7 @@
 // COpenDlg dialog
 
 //IMPLEMENT_DYNAMIC(COpenDlg, CResizableDialog)
-COpenDlg::COpenDlg(CWnd* pParent /*=NULL*/)
+COpenDlg::COpenDlg(CWnd* pParent /*=nullptr*/)
     : CResizableDialog(COpenDlg::IDD, pParent)
     , m_path(_T(""))
     , m_path2(_T(""))
@@ -74,7 +74,9 @@ BOOL COpenDlg::OnInitDialog()
 
     m_icon.SetIcon((HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
 
-    CRecentFileList& MRU = AfxGetAppSettings().MRU;
+    CAppSettings& s = AfxGetAppSettings();
+
+    CRecentFileList& MRU = s.MRU;
     MRU.ReadList();
     m_mrucombo.ResetContent();
     for (int i = 0; i < MRU.GetSize(); i++) {
@@ -84,7 +86,7 @@ BOOL COpenDlg::OnInitDialog()
     }
     CorrectComboListWidth(m_mrucombo);
 
-    CRecentFileList& MRUDub = AfxGetAppSettings().MRUDub;
+    CRecentFileList& MRUDub = s.MRUDub;
     MRUDub.ReadList();
     m_mrucombo2.ResetContent();
     for (int i = 0; i < MRUDub.GetSize(); i++) {
@@ -114,10 +116,10 @@ BOOL COpenDlg::OnInitDialog()
 
     CRect r;
     GetWindowRect(r);
-    CSize s = r.Size();
-    SetMinTrackSize(s);
-    s.cx = 1000;
-    SetMaxTrackSize(s);
+    CSize size = r.Size();
+    SetMinTrackSize(size);
+    size.cx = 1000;
+    SetMaxTrackSize(size);
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
@@ -145,7 +147,7 @@ void COpenDlg::OnBnClickedBrowsebutton()
         dwFlags |= OFN_DONTADDTORECENT;
     }
 
-    COpenFileDlg fd(mask, true, NULL, m_path, dwFlags, filter, this);
+    COpenFileDlg fd(mask, true, nullptr, m_path, dwFlags, filter, this);
     if (fd.DoModal() != IDOK) {
         return;
     }
@@ -192,7 +194,7 @@ void COpenDlg::OnBnClickedBrowsebutton2()
         dwFlags |= OFN_DONTADDTORECENT;
     }
 
-    COpenFileDlg fd(mask, false, NULL, m_path2, dwFlags, filter, this);
+    COpenFileDlg fd(mask, false, nullptr, m_path2, dwFlags, filter, this);
 
     if (fd.DoModal() != IDOK) {
         return;

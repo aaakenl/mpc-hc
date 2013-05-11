@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -30,7 +30,7 @@
 //
 
 CVobSubFileRipper::CVobSubFileRipper()
-    : CVobSubFile(NULL)
+    : CVobSubFile(nullptr)
     , m_fThreadActive(false)
     , m_fBreakThread(false)
     , m_fIndexing(false)
@@ -472,19 +472,19 @@ bool CVobSubFileRipper::Create()
 
     PGC& pgc = m_rd.pgcs[m_rd.iSelPGC];
 
-    if (pgc.iSelAngle < 0 || pgc.iSelAngle > 9 || pgc.angles[pgc.iSelAngle].GetCount() == 0) {
+    if (pgc.iSelAngle < 0 || pgc.iSelAngle > 9 || pgc.angles[pgc.iSelAngle].IsEmpty()) {
         Log(LOG_ERROR, _T("Invalid angle number (%d)!"), pgc.iSelAngle);
         return false;
     }
 
     CAtlArray<vc_t>& angle = pgc.angles[pgc.iSelAngle];
 
-    if (m_rd.selids.GetCount() == 0 && !m_rd.fClosedCaption) {
+    if (m_rd.selids.IsEmpty() && !m_rd.fClosedCaption) {
         Log(LOG_ERROR, _T("No valid stream set to be extacted!"));
         return false;
     }
 
-    if (m_rd.selvcs.GetCount() == 0) {
+    if (m_rd.selvcs.IsEmpty()) {
         Log(LOG_ERROR, _T("No valid vob/cell id set to be extacted!"));
         return false;
     }
@@ -771,7 +771,7 @@ bool CVobSubFileRipper::Create()
     Progress(1);
 
     for (ptrdiff_t i = 0; i < 32; i++) {
-        if (m_iLang == -1 && m_langs[i].subpos.GetCount() > 0) {
+        if (m_iLang == -1 && !m_langs[i].subpos.IsEmpty()) {
             m_iLang = (int)i;
         }
         m_langs[i].id = pgc.ids[i];
@@ -811,7 +811,7 @@ bool CVobSubFileRipper::Create()
 
     Log(LOG_INFO, _T("Subtitles saved"));
 
-    if (!m_vob.IsDVD() && loadedchunks.GetCount() == 0) {
+    if (!m_vob.IsDVD() && loadedchunks.IsEmpty()) {
         if (SaveChunks(foundchunks)) {
             Log(LOG_INFO, _T(".chunk file saved"));
         }
@@ -952,7 +952,7 @@ STDMETHODIMP CVobSubFileRipper::LoadParamFile(CString fn)
             }
             phase = P_PGC;
         } else if (phase == P_PGC) {
-            m_rd.iSelPGC = _tcstol(line, NULL, 10) - 1;
+            m_rd.iSelPGC = _tcstol(line, nullptr, 10) - 1;
             if (m_rd.iSelPGC < 0 || (size_t)m_rd.iSelPGC >= m_rd.pgcs.GetCount()) {
                 break;
             }
@@ -960,7 +960,7 @@ STDMETHODIMP CVobSubFileRipper::LoadParamFile(CString fn)
         } else if (phase == 3) {
             PGC& pgc = m_rd.pgcs[m_rd.iSelPGC];
 
-            pgc.iSelAngle = _tcstol(line, NULL, 10);
+            pgc.iSelAngle = _tcstol(line, nullptr, 10);
             if (pgc.iSelAngle < 0 || pgc.iSelAngle > max(1, pgc.nAngles) || pgc.iSelAngle > 9) {
                 break;
             }
@@ -1018,7 +1018,7 @@ STDMETHODIMP CVobSubFileRipper::LoadParamFile(CString fn)
             } else {
                 line += ' ';
 
-                while (line.GetLength() > 0) {
+                while (!line.IsEmpty()) {
                     int n = line.Find(_T(" "));
 
                     CString lang = line.Left(n);
@@ -1059,7 +1059,7 @@ STDMETHODIMP CVobSubFileRipper::LoadParamFile(CString fn)
                     }
                 }
 
-                if ((m_rd.selids.GetCount() > 0 || m_rd.fClosedCaption) && line.IsEmpty()) {
+                if ((!m_rd.selids.IsEmpty() || m_rd.fClosedCaption) && line.IsEmpty()) {
                     phase = P_OPTIONS;
                 }
             }

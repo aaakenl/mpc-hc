@@ -53,7 +53,7 @@ const LanguageResource CMPlayerCApp::languageResources[] = {
     {ID_LANGUAGE_CHINESE_TRADITIONAL,   3076,   _T("Chinese (Traditional)"),    _T("Lang\\mpcresources.tc.dll")},
     {ID_LANGUAGE_CZECH,                 1029,   _T("Czech"),                    _T("Lang\\mpcresources.cz.dll")},
     {ID_LANGUAGE_DUTCH,                 1043,   _T("Dutch"),                    _T("Lang\\mpcresources.nl.dll")},
-    {ID_LANGUAGE_ENGLISH,               0,      _T("English"),                  NULL},
+    {ID_LANGUAGE_ENGLISH,               0,      _T("English"),                  nullptr},
     {ID_LANGUAGE_FRENCH,                1036,   _T("French"),                   _T("Lang\\mpcresources.fr.dll")},
     {ID_LANGUAGE_GERMAN,                1031,   _T("German"),                   _T("Lang\\mpcresources.de.dll")},
     {ID_LANGUAGE_GREEK,                 1032,   _T("Greek"),                    _T("Lang\\mpcresources.el.dll")},
@@ -78,7 +78,7 @@ const size_t CMPlayerCApp::languageResourcesCount = _countof(CMPlayerCApp::langu
 HICON LoadIcon(CString fn, bool fSmall)
 {
     if (fn.IsEmpty()) {
-        return NULL;
+        return nullptr;
     }
 
     CString ext = fn.Left(fn.Find(_T("://")) + 1).TrimRight(':');
@@ -112,7 +112,7 @@ HICON LoadIcon(CString fn, bool fSmall)
 
             len = _countof(buff);
             memset(buff, 0, sizeof(buff));
-            if (ERROR_SUCCESS != key.QueryStringValue(NULL, buff, &len) || (ext = buff).Trim().IsEmpty()) {
+            if (ERROR_SUCCESS != key.QueryStringValue(nullptr, buff, &len) || (ext = buff).Trim().IsEmpty()) {
                 break;
             }
 
@@ -125,7 +125,7 @@ HICON LoadIcon(CString fn, bool fSmall)
 
         len = _countof(buff);
         memset(buff, 0, sizeof(buff));
-        if (ERROR_SUCCESS != key.QueryStringValue(NULL, buff, &len) || (icon = buff).Trim().IsEmpty()) {
+        if (ERROR_SUCCESS != key.QueryStringValue(nullptr, buff, &len) || (icon = buff).Trim().IsEmpty()) {
             break;
         }
 
@@ -141,10 +141,10 @@ HICON LoadIcon(CString fn, bool fSmall)
 
         icon = icon.Left(i);
 
-        HICON hIcon = NULL;
+        HICON hIcon = nullptr;
         UINT cnt = fSmall
-                   ? ExtractIconEx(icon, id, NULL, &hIcon, 1)
-                   : ExtractIconEx(icon, id, &hIcon, NULL, 1);
+                   ? ExtractIconEx(icon, id, nullptr, &hIcon, 1)
+                   : ExtractIconEx(icon, id, &hIcon, nullptr, 1);
         UNREFERENCED_PARAMETER(cnt);
         if (hIcon) {
             return hIcon;
@@ -167,7 +167,7 @@ bool LoadType(CString fn, CString& type)
         // Try MPC-HC's internal formats list
         const CMediaFormatCategory* mfc = AfxGetAppSettings().m_Formats.FindMediaByExt(ext);
 
-        if (mfc != NULL) {
+        if (mfc != nullptr) {
             found = true;
             type = mfc->GetDescription();
         } else { // Fallback to registry
@@ -193,7 +193,7 @@ bool LoadType(CString fn, CString& type)
                     len = _countof(buff);
                     memset(buff, 0, sizeof(buff));
 
-                    if (ERROR_SUCCESS != key.QueryStringValue(NULL, buff, &len)) {
+                    if (ERROR_SUCCESS != key.QueryStringValue(nullptr, buff, &len)) {
                         break;
                     }
 
@@ -274,7 +274,7 @@ END_MESSAGE_MAP()
 // CMPlayerCApp construction
 
 CMPlayerCApp::CMPlayerCApp()
-    : m_hNTDLL(NULL)
+    : m_hNTDLL(nullptr)
     , m_fClosingState(false)
     , m_fProfileInitialized(false)
 {
@@ -330,13 +330,13 @@ void CMPlayerCApp::ShowCmdlnSwitches() const
 
 CMPlayerCApp theApp;
 
-HWND g_hWnd = NULL;
+HWND g_hWnd = nullptr;
 
 bool CMPlayerCApp::StoreSettingsToIni()
 {
     CString ini = GetIniPath();
     free((void*)m_pszRegistryKey);
-    m_pszRegistryKey = NULL;
+    m_pszRegistryKey = nullptr;
     free((void*)m_pszProfileName);
     m_pszProfileName = _tcsdup(ini);
 
@@ -346,7 +346,7 @@ bool CMPlayerCApp::StoreSettingsToIni()
 bool CMPlayerCApp::StoreSettingsToRegistry()
 {
     free((void*)m_pszRegistryKey);
-    m_pszRegistryKey = NULL;
+    m_pszRegistryKey = nullptr;
 
     SetRegistryKey(_T("Gabest"));
 
@@ -372,7 +372,7 @@ bool CMPlayerCApp::GetAppSavePath(CString& path)
     if (IsIniValid()) { // If settings ini file found, store stuff in the same folder as the exe file
         path = GetProgramPath();
     } else {
-        HRESULT hr = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, path.GetBuffer(MAX_PATH));
+        HRESULT hr = SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, 0, path.GetBuffer(MAX_PATH));
         path.ReleaseBuffer();
         if (FAILED(hr)) {
             return false;
@@ -473,11 +473,11 @@ void CMPlayerCApp::InitProfile()
         int fpStatus;
         do { // Open mpc-hc.ini in UNICODE mode, retry if it is already being used by another process
             fp = _tfsopen(m_pszProfileName, _T("r, ccs=UNICODE"), _SH_SECURE);
-            if (!fp && (GetLastError() == ERROR_SHARING_VIOLATION)) {
-                Sleep(100);
-                continue;
+            if (fp || (GetLastError() != ERROR_SHARING_VIOLATION)) {
+                break;
             }
-        } while (false);
+            Sleep(100);
+        } while (true);
         if (!fp) {
             ASSERT(FALSE);
             return;
@@ -488,11 +488,11 @@ void CMPlayerCApp::InitProfile()
             ASSERT(fpStatus == 0);
             do { // Reopen mpc-hc.ini in ANSI mode, retry if it is already being used by another process
                 fp = _tfsopen(m_pszProfileName, _T("r"), _SH_SECURE);
-                if (!fp && (GetLastError() == ERROR_SHARING_VIOLATION)) {
-                    Sleep(100);
-                    continue;
+                if (fp || (GetLastError() != ERROR_SHARING_VIOLATION)) {
+                    break;
                 }
-            } while (false);
+                Sleep(100);
+            } while (true);
             if (!fp) {
                 ASSERT(FALSE);
                 return;
@@ -502,12 +502,25 @@ void CMPlayerCApp::InitProfile()
         CStdioFile file(fp);
         CString line, section, var, val;
         while (file.ReadString(line)) {
+            // Parse mpc-hc.ini file, this parser:
+            //  - doesn't trim whitespaces
+            //  - doesn't remove quotation marks
+            //  - omits keys with empty names
+            //  - omits unnamed sections
             int pos = 0;
             if (line[0] == _T('[')) {
-                section = line.Tokenize(_T("[]"), pos);
+                pos = line.Find(_T(']'));
+                if (pos == -1) {
+                    continue;
+                }
+                section = line.Mid(1, pos - 1);
             } else if (line[0] != _T(';')) {
-                var = line.Tokenize(_T("="), pos);
-                val = line.Tokenize(_T(""), pos);
+                pos = line.Find(_T('='));
+                if (pos == -1) {
+                    continue;
+                }
+                var = line.Mid(0, pos);
+                val = line.Mid(pos + 1);
                 if (!section.IsEmpty() && !var.IsEmpty()) {
                     m_ProfileMap[section][var] = val;
                 }
@@ -529,11 +542,11 @@ void CMPlayerCApp::FlushProfile()
         int fpStatus;
         do { // Open mpc-hc.ini, retry if it is already being used by another process
             fp = _tfsopen(m_pszProfileName, _T("w, ccs=UTF-8"), _SH_SECURE);
-            if (!fp && (GetLastError() == ERROR_SHARING_VIOLATION)) {
-                Sleep(100);
-                continue;
+            if (fp || (GetLastError() != ERROR_SHARING_VIOLATION)) {
+                break;
             }
-        } while (false);
+            Sleep(100);
+        } while (true);
         if (!fp) {
             ASSERT(FALSE);
             return;
@@ -852,7 +865,7 @@ bool CMPlayerCApp::SendCommandLine(HWND hWnd)
     cds.cbData = bufflen;
     cds.lpData = (void*)(BYTE*)buff;
 
-    return !!SendMessage(hWnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
+    return !!SendMessage(hWnd, WM_COPYDATA, (WPARAM)nullptr, (LPARAM)&cds);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -910,14 +923,14 @@ MMRESULT(__stdcall* Real_mixerSetControlDetails)(HMIXEROBJ hmxobj,
 
 
 typedef NTSTATUS(WINAPI* FUNC_NTQUERYINFORMATIONPROCESS)(HANDLE ProcessHandle, PROCESSINFOCLASS ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength);
-static FUNC_NTQUERYINFORMATIONPROCESS Real_NtQueryInformationProcess = NULL;
+static FUNC_NTQUERYINFORMATIONPROCESS Real_NtQueryInformationProcess = nullptr;
 /*
 NTSTATUS (* Real_NtQueryInformationProcess) (HANDLE             ProcessHandle,
                                              PROCESSINFOCLASS   ProcessInformationClass,
                                              PVOID              ProcessInformation,
                                              ULONG              ProcessInformationLength,
                                              PULONG             ReturnLength)
-    = NULL;
+    = nullptr;
 */
 
 
@@ -940,9 +953,9 @@ NTSTATUS WINAPI Mine_NtQueryInformationProcess(HANDLE ProcessHandle, PROCESSINFO
         PEB_NT PEB;
 
         pPEB = (PEB_NT*)pbi->PebBaseAddress;
-        ReadProcessMemory(ProcessHandle, pPEB, &PEB, sizeof(PEB), NULL);
+        ReadProcessMemory(ProcessHandle, pPEB, &PEB, sizeof(PEB), nullptr);
         PEB.BeingDebugged = 0;
-        WriteProcessMemory(ProcessHandle, pPEB, &PEB, sizeof(PEB), NULL);
+        WriteProcessMemory(ProcessHandle, pPEB, &PEB, sizeof(PEB), nullptr);
     } else if (ProcessInformationClass == 7) { // ProcessDebugPort
         BOOL* pDebugPort = (BOOL*)ProcessInformation;
         *pDebugPort = FALSE;
@@ -1013,7 +1026,7 @@ BOOL CreateFakeVideoTS(LPCWSTR strIFOPath, LPWSTR strFakeFile, size_t nFakeFileS
         return FALSE;
     }
 
-    _wsplitpath_s(strIFOPath, NULL, 0, NULL, 0, strFileName, _countof(strFileName), strExt, _countof(strExt));
+    _wsplitpath_s(strIFOPath, nullptr, 0, nullptr, 0, strFileName, _countof(strFileName), strExt, _countof(strExt));
     _snwprintf_s(strFakeFile, nFakeFileSize, _TRUNCATE, L"%sMPC%s%s", szTempPath, strFileName, strExt);
 
     if (Ifo.OpenFile(strIFOPath) &&
@@ -1070,7 +1083,7 @@ BOOL WINAPI Mine_DeviceIoControl(HANDLE hDevice, DWORD dwIoControlCode, LPVOID l
 BOOL SetHeapOptions()
 {
     HMODULE hLib = LoadLibrary(L"kernel32.dll");
-    if (hLib == NULL) {
+    if (hLib == nullptr) {
         return FALSE;
     }
 
@@ -1086,7 +1099,7 @@ BOOL SetHeapOptions()
 #   define HeapEnableTerminationOnCorruption (HEAP_INFORMATION_CLASS)1
 #endif
 
-    BOOL fRet = (pHsi)(NULL, HeapEnableTerminationOnCorruption, NULL, 0)
+    BOOL fRet = (pHsi)(nullptr, HeapEnableTerminationOnCorruption, nullptr, 0)
                 ? TRUE
                 : FALSE;
     if (hLib) {
@@ -1139,8 +1152,7 @@ BOOL CMPlayerCApp::InitInstance()
     lError = DetourTransactionCommit();
     ASSERT(lError == NOERROR);
 
-    HRESULT hr;
-    if (FAILED(hr = OleInitialize(0))) {
+    if (FAILED(OleInitialize(0))) {
         AfxMessageBox(_T("OleInitialize failed!"));
         return FALSE;
     }
@@ -1157,7 +1169,7 @@ BOOL CMPlayerCApp::InitInstance()
     wndcls.hIcon = icon;
     wndcls.hCursor = LoadCursor(IDC_ARROW);
     wndcls.hbrBackground = 0;//(HBRUSH)(COLOR_WINDOW + 1); // no bkg brush, the view and the bars should always fill the whole client area
-    wndcls.lpszMenuName = NULL;
+    wndcls.lpszMenuName = nullptr;
     wndcls.lpszClassName = MPC_WND_CLASS_NAME;
 
     if (!AfxRegisterClass(&wndcls)) {
@@ -1165,7 +1177,7 @@ BOOL CMPlayerCApp::InitInstance()
         return FALSE;
     }
 
-    if (!AfxSocketInit(NULL)) {
+    if (!AfxSocketInit(nullptr)) {
         AfxMessageBox(_T("AfxSocketInit failed!"));
         return FALSE;
     }
@@ -1188,14 +1200,14 @@ BOOL CMPlayerCApp::InitInstance()
 
     if (m_s.nCLSwitches & CLSW_RESET) { // reset settings
         // We want the other instances to be closed before resetting the settings.
-        HWND hWnd = FindWindow(MPC_WND_CLASS_NAME, NULL);
+        HWND hWnd = FindWindow(MPC_WND_CLASS_NAME, nullptr);
 
         while (hWnd) {
             Sleep(500);
 
-            hWnd = FindWindow(MPC_WND_CLASS_NAME, NULL);
+            hWnd = FindWindow(MPC_WND_CLASS_NAME, nullptr);
 
-            if (hWnd && MessageBox(NULL, ResStr(IDS_RESET_SETTINGS_MUTEX), ResStr(IDS_RESET_SETTINGS), MB_ICONEXCLAMATION | MB_RETRYCANCEL) == IDCANCEL) {
+            if (hWnd && MessageBox(nullptr, ResStr(IDS_RESET_SETTINGS_MUTEX), ResStr(IDS_RESET_SETTINGS), MB_ICONEXCLAMATION | MB_RETRYCANCEL) == IDCANCEL) {
                 return FALSE;
             }
         }
@@ -1257,7 +1269,7 @@ BOOL CMPlayerCApp::InitInstance()
 
         CFileAssoc::FreeIconLib();
 
-        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 
         return FALSE;
     }
@@ -1270,7 +1282,7 @@ BOOL CMPlayerCApp::InitInstance()
             CFileAssoc::Register(mf[i], false, false, false);
         }
 
-        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 
         return FALSE;
     }
@@ -1284,7 +1296,7 @@ BOOL CMPlayerCApp::InitInstance()
 
         CFileAssoc::ReAssocIcons(registeredExts);
 
-        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 
         return FALSE;
     }
@@ -1295,7 +1307,7 @@ BOOL CMPlayerCApp::InitInstance()
 
         switch (m_s.iAdminOption) {
             case CPPageFormats::IDD: {
-                CPPageSheet options(ResStr(IDS_OPTIONS_CAPTION), NULL, NULL, m_s.iAdminOption);
+                CPPageSheet options(ResStr(IDS_OPTIONS_CAPTION), nullptr, nullptr, m_s.iAdminOption);
                 options.LockPage();
                 options.DoModal();
             }
@@ -1307,14 +1319,14 @@ BOOL CMPlayerCApp::InitInstance()
         return FALSE;
     }
 
-    m_mutexOneInstance.Create(NULL, TRUE, MPC_WND_CLASS_NAME);
+    m_mutexOneInstance.Create(nullptr, TRUE, MPC_WND_CLASS_NAME);
 
     if (GetLastError() == ERROR_ALREADY_EXISTS &&
             (!(m_s.GetAllowMultiInst() || m_s.nCLSwitches & CLSW_NEW || m_cmdln.IsEmpty()) || m_s.nCLSwitches & CLSW_ADD)) {
 
         DWORD res = WaitForSingleObject(m_mutexOneInstance.m_h, 5000);
         if (res == WAIT_OBJECT_0 || res == WAIT_ABANDONED) {
-            HWND hWnd = ::FindWindow(MPC_WND_CLASS_NAME, NULL);
+            HWND hWnd = ::FindWindow(MPC_WND_CLASS_NAME, nullptr);
             if (hWnd) {
                 SetForegroundWindow(hWnd);
                 if (!(m_s.nCLSwitches & CLSW_MINIMIZED) && IsIconic(hWnd)) {
@@ -1349,7 +1361,7 @@ BOOL CMPlayerCApp::InitInstance()
 
     CMainFrame* pFrame = DEBUG_NEW CMainFrame;
     m_pMainWnd = pFrame;
-    if (!pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL)) {
+    if (!pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, nullptr, nullptr)) {
         AfxMessageBox(_T("CMainFrame::LoadFrame failed!"));
         return FALSE;
     }
@@ -1412,7 +1424,7 @@ UINT CMPlayerCApp::GetRemoteControlCodeMicrosoft(UINT nInputcode, HRAWINPUT hRaw
     UINT nMceCmd = 0;
 
     // Support for MCE remote control
-    GetRawInputData(hRawInput, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+    GetRawInputData(hRawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
     if (dwSize > 0) {
         BYTE* pRawBuffer = DEBUG_NEW BYTE[dwSize];
         if (GetRawInputData(hRawInput, RID_INPUT, pRawBuffer, &dwSize, sizeof(RAWINPUTHEADER)) != -1) {
@@ -1432,7 +1444,7 @@ UINT CMPlayerCApp::GetRemoteControlCodeSRM7500(UINT nInputcode, HRAWINPUT hRawIn
     UINT dwSize = 0;
     UINT nMceCmd = 0;
 
-    GetRawInputData(hRawInput, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+    GetRawInputData(hRawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
     if (dwSize > 21) {
         BYTE* pRawBuffer = DEBUG_NEW BYTE[dwSize];
         if (GetRawInputData(hRawInput, RID_INPUT, pRawBuffer, &dwSize, sizeof(RAWINPUTHEADER)) != -1) {
@@ -1488,9 +1500,9 @@ void CMPlayerCApp::RegisterHotkeys()
     RID_DEVICE_INFO deviceInfo;
     RAWINPUTDEVICE MCEInputDevice[] = {
         // usUsagePage     usUsage         dwFlags     hwndTarget
-        {  0xFFBC,         0x88,           0,          NULL},
-        {  0x000C,         0x01,           0,          NULL},
-        {  0x000C,         0x80,           0,          NULL}
+        {  0xFFBC,         0x88,           0,          nullptr},
+        {  0x000C,         0x01,           0,          nullptr},
+        {  0x000C,         0x80,           0,          nullptr}
     };
 
     // Register MCE Remote Control raw input
@@ -1499,7 +1511,7 @@ void CMPlayerCApp::RegisterHotkeys()
     }
 
     // Get the size of the device list
-    nErrCode = GetRawInputDeviceList(NULL, &nInputDeviceCount, sizeof(RAWINPUTDEVICELIST));
+    nErrCode = GetRawInputDeviceList(nullptr, &nInputDeviceCount, sizeof(RAWINPUTDEVICELIST));
     inputDeviceList.Attach(new RAWINPUTDEVICELIST[nInputDeviceCount]);
     if (nErrCode == UINT(-1) || !nInputDeviceCount || !inputDeviceList) {
         ASSERT(nErrCode != UINT(-1));
@@ -1625,7 +1637,7 @@ void CMPlayerCApp::OnFileExit()
 // CRemoteCtrlClient
 
 CRemoteCtrlClient::CRemoteCtrlClient()
-    : m_pWnd(NULL)
+    : m_pWnd(nullptr)
     , m_nStatus(DISCONNECTED)
 {
 }
@@ -1660,7 +1672,7 @@ void CRemoteCtrlClient::Connect(CString addr)
     Create();
 
     CString ip = addr.Left(addr.Find(':') + 1).TrimRight(':');
-    int port = _tcstol(addr.Mid(addr.Find(':') + 1), NULL, 10);
+    int port = _tcstol(addr.Mid(addr.Find(':') + 1), nullptr, 10);
 
     __super::Connect(ip, port);
 
@@ -1725,7 +1737,7 @@ void CRemoteCtrlClient::ExecuteCommand(CStringA cmd, int repcnt)
     }
     cmd.Replace(' ', '_');
 
-    CAppSettings& s = AfxGetAppSettings();
+    const CAppSettings& s = AfxGetAppSettings();
 
     POSITION pos = s.wmcmds.GetHeadPosition();
     while (pos) {
@@ -1733,7 +1745,7 @@ void CRemoteCtrlClient::ExecuteCommand(CStringA cmd, int repcnt)
         CStringA name = TToA(wc.GetName());
         name.Replace(' ', '_');
         if ((repcnt == 0 && wc.rmrepcnt == 0 || wc.rmrepcnt > 0 && (repcnt % wc.rmrepcnt) == 0)
-                && (!name.CompareNoCase(cmd) || !wc.rmcmd.CompareNoCase(cmd) || wc.cmd == (WORD)strtol(cmd, NULL, 10))) {
+                && (!name.CompareNoCase(cmd) || !wc.rmcmd.CompareNoCase(cmd) || wc.cmd == (WORD)strtol(cmd, nullptr, 10))) {
             CAutoLock cAutoLock(&m_csLock);
             TRACE(_T("CRemoteCtrlClient (calling command): %s\n"), wc.GetName());
             m_pWnd->SendMessage(WM_COMMAND, wc.cmd);
@@ -1757,7 +1769,7 @@ void CWinLircClient::OnCommand(CStringA str)
             !token.IsEmpty();
             token = str.Tokenize(" ", i), j++) {
         if (j == 1) {
-            repcnt = strtol(token, NULL, 16);
+            repcnt = strtol(token, nullptr, 16);
         } else if (j == 2) {
             ExecuteCommand(token, repcnt);
         }
@@ -1782,7 +1794,7 @@ void CUIceClient::OnCommand(CStringA str)
         if (j == 0) {
             cmd = token;
         } else if (j == 1) {
-            ExecuteCommand(cmd, strtol(token, NULL, 16));
+            ExecuteCommand(cmd, strtol(token, nullptr, 16));
         }
     }
 }
@@ -1797,13 +1809,13 @@ void GetCurDispMode(dispmode& dm, CString& DisplayName)
 {
     HDC hDC;
     CString DisplayName1 = DisplayName;
-    if ((DisplayName == _T("Current")) || (DisplayName == _T(""))) {
+    if ((DisplayName == _T("Current")) || DisplayName.IsEmpty()) {
         CMonitor monitor;
         CMonitors monitors;
         monitor = monitors.GetNearestMonitor(AfxGetApp()->m_pMainWnd);
         monitor.GetName(DisplayName1);
     }
-    hDC = CreateDC(DisplayName1, NULL, NULL, NULL);
+    hDC = CreateDC(DisplayName1, nullptr, nullptr, nullptr);
     if (hDC) {
         dm.fValid = true;
         dm.size = CSize(GetDeviceCaps(hDC, HORZRES), GetDeviceCaps(hDC, VERTRES));
@@ -1818,7 +1830,7 @@ bool GetDispMode(int i, dispmode& dm, CString& DisplayName)
     DEVMODE devmode;
     CString DisplayName1 = DisplayName;
     devmode.dmSize = sizeof(DEVMODE);
-    if ((DisplayName == _T("Current")) || (DisplayName == _T(""))) {
+    if ((DisplayName == _T("Current")) || DisplayName.IsEmpty()) {
         CMonitor monitor;
         CMonitors monitors;
         monitor = monitors.GetNearestMonitor(AfxGetApp()->m_pMainWnd);
@@ -1856,16 +1868,16 @@ void SetDispMode(const dispmode& dm, CString& DisplayName)
     dmScreenSettings.dmDisplayFlags = dm.dmDisplayFlags;
     dmScreenSettings.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY  | DM_DISPLAYFLAGS;
     CString DisplayName1 = DisplayName;
-    if ((DisplayName == _T("Current")) || (DisplayName == _T(""))) {
+    if ((DisplayName == _T("Current")) || DisplayName.IsEmpty()) {
         CMonitor monitor;
         CMonitors monitors;
         monitor = monitors.GetNearestMonitor(AfxGetApp()->m_pMainWnd);
         monitor.GetName(DisplayName1);
     }
     if (AfxGetAppSettings().fRestoreResAfterExit) {
-        ChangeDisplaySettingsEx(DisplayName1, &dmScreenSettings, NULL, CDS_FULLSCREEN, NULL);
+        ChangeDisplaySettingsEx(DisplayName1, &dmScreenSettings, nullptr, CDS_FULLSCREEN, nullptr);
     } else {
-        ChangeDisplaySettingsEx(DisplayName1, &dmScreenSettings, NULL, NULL, NULL);
+        ChangeDisplaySettingsEx(DisplayName1, &dmScreenSettings, nullptr, 0, nullptr);
     }
 }
 
@@ -1877,7 +1889,7 @@ void SetAudioRenderer(int AudioDevNo)
     int i = 2;
 
     BeginEnumSysDev(CLSID_AudioRendererCategory, pMoniker) {
-        LPOLESTR olestr = NULL;
+        LPOLESTR olestr = nullptr;
         if (FAILED(pMoniker->GetDisplayName(0, 0, &olestr))) {
             continue;
         }
@@ -1914,7 +1926,7 @@ bool FindRedir(CUrl& src, CString ct, CString& body, CAtlList<CString>& urls, CA
 
         CAtlREMatchContextT mc;
         const CAtlREMatchContextT::RECHAR* s = (LPCTSTR)body;
-        const CAtlREMatchContextT::RECHAR* e = NULL;
+        const CAtlREMatchContextT::RECHAR* e = nullptr;
         for (; s && re->Match(s, &mc, &e); s = e) {
             const CAtlREMatchContextT::RECHAR* szStart = 0;
             const CAtlREMatchContextT::RECHAR* szEnd = 0;
@@ -1942,7 +1954,7 @@ bool FindRedir(CUrl& src, CString ct, CString& body, CAtlList<CString>& urls, CA
         }
     }
 
-    return urls.GetCount() > 0;
+    return !urls.IsEmpty();
 }
 
 bool FindRedir(CString& fn, CString ct, CAtlList<CString>& fns, CAutoPtrList<CAtlRegExpT>& res)
@@ -1962,7 +1974,7 @@ bool FindRedir(CString& fn, CString ct, CAtlList<CString>& fns, CAutoPtrList<CAt
 
         CAtlREMatchContextT mc;
         const CAtlREMatchContextT::RECHAR* s = (LPCTSTR)body;
-        const CAtlREMatchContextT::RECHAR* e = NULL;
+        const CAtlREMatchContextT::RECHAR* e = nullptr;
         for (; s && re->Match(s, &mc, &e); s = e) {
             const CAtlREMatchContextT::RECHAR* szStart = 0;
             const CAtlREMatchContextT::RECHAR* szEnd = 0;
@@ -1993,7 +2005,7 @@ bool FindRedir(CString& fn, CString ct, CAtlList<CString>& fns, CAutoPtrList<CAt
         }
     }
 
-    return fns.GetCount() > 0;
+    return !fns.IsEmpty();
 }
 
 CStringA GetContentType(CString fn, CAtlList<CString>* redir)
@@ -2043,7 +2055,7 @@ CStringA GetContentType(CString fn, CAtlList<CString>* redir)
 
             ProxyServer = Explode(ProxyServer, sl, ':');
             if (sl.GetCount() > 1) {
-                ProxyPort = _tcstol(sl.GetTail(), NULL, 10);
+                ProxyPort = _tcstol(sl.GetTail(), nullptr, 10);
             }
         }
 
@@ -2067,7 +2079,7 @@ CStringA GetContentType(CString fn, CAtlList<CString>* redir)
                 "Accept: */*\r\n"
                 "\r\n", path, host);
 
-            // MessageBox(NULL, CString(hdr), _T("Sending..."), MB_OK);
+            // MessageBox(nullptr, CString(hdr), _T("Sending..."), MB_OK);
 
             if (s.Send((LPCSTR)hdr, hdr.GetLength()) < hdr.GetLength()) {
                 return "";
@@ -2089,7 +2101,7 @@ CStringA GetContentType(CString fn, CAtlList<CString>* redir)
                 }
             }
 
-            // MessageBox(NULL, CString(hdr), _T("Received..."), MB_OK);
+            // MessageBox(nullptr, CString(hdr), _T("Received..."), MB_OK);
 
             CAtlList<CStringA> sl;
             Explode(hdr, sl, '\n');
@@ -2160,7 +2172,7 @@ CStringA GetContentType(CString fn, CAtlList<CString>* redir)
             ct = _T("application/x-bdmv-playlist");
         }
 
-        FILE* f = NULL;
+        FILE* f = nullptr;
         if (!_tfopen_s(&f, fn, _T("rb"))) {
             CStringA str;
             str.ReleaseBufferSetLength((int)fread(str.GetBuffer(10240), 1, 10240, f));
@@ -2240,7 +2252,7 @@ COLORPROPERTY_RANGE* CMPlayerCApp::GetColorControl(ControlType nFlag)
         case ProcAmp_Saturation:
             return &m_ColorControl[3];
     }
-    return NULL;
+    return nullptr;
 }
 
 void CMPlayerCApp::ResetColorControlRange()
@@ -2361,7 +2373,7 @@ VMR9ProcAmpControlRange* CMPlayerCApp::GetVMR9ColorControl(ControlType nFlag)
         case ProcAmp_Saturation:
             return &m_VMR9ColorControl[3];
     }
-    return NULL;
+    return nullptr;
 }
 
 DXVA2_ValueRange* CMPlayerCApp::GetEVRColorControl(ControlType nFlag)
@@ -2376,7 +2388,7 @@ DXVA2_ValueRange* CMPlayerCApp::GetEVRColorControl(ControlType nFlag)
         case ProcAmp_Saturation:
             return &m_EVRColorControl[3];
     }
-    return NULL;
+    return nullptr;
 }
 
 const LanguageResource& CMPlayerCApp::GetLanguageResourceByResourceID(UINT resourceID)
@@ -2431,21 +2443,21 @@ LRESULT CALLBACK RTLWindowsLayoutCbtFilterHook(int code, WPARAM wParam, LPARAM l
             SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYOUTRTL);
         }
     }
-    return CallNextHookEx(NULL, code, wParam, lParam);
+    return CallNextHookEx(nullptr, code, wParam, lParam);
 }
 
 bool CMPlayerCApp::SetLanguage(const LanguageResource& languageResource, bool showErrorMsg /*= true*/)
 {
     CAppSettings& s = AfxGetAppSettings();
-    HMODULE hMod = NULL;
+    HMODULE hMod = nullptr;
     bool success = false;
 
     // Try to load the resource dll if any
     if (languageResource.dllPath) {
         hMod = LoadLibrary(languageResource.dllPath);
-        if (hMod == NULL) { // The dll failed to load for some reason
+        if (hMod == nullptr) { // The dll failed to load for some reason
             if (showErrorMsg) {
-                MessageBox(NULL, _T("Error loading the chosen language.\n\nPlease reinstall MPC-HC."),
+                MessageBox(nullptr, _T("Error loading the chosen language.\n\nPlease reinstall MPC-HC."),
                            _T("Media Player Classic - Home Cinema"), MB_ICONWARNING | MB_OK);
             }
         } else { // Check if the version of the resource dll is correct
@@ -2462,31 +2474,31 @@ bool CMPlayerCApp::SetLanguage(const LanguageResource& languageResource, bool sh
             if (!success) { // The version wasn't correct
                 if (showErrorMsg) {
                     // This message should stay in English!
-                    int sel = MessageBox(NULL, _T("Your language pack will not work with this version.\n\nDo you want to visit the download page to get a full package including the translations?"),
+                    int sel = MessageBox(nullptr, _T("Your language pack will not work with this version.\n\nDo you want to visit the download page to get a full package including the translations?"),
                                          _T("Media Player Classic - Home Cinema"), MB_ICONWARNING | MB_YESNO);
                     if (sel == IDYES) {
-                        ShellExecute(NULL, _T("open"), DOWNLOAD_URL, NULL, NULL, SW_SHOWDEFAULT);
+                        ShellExecute(nullptr, _T("open"), DOWNLOAD_URL, nullptr, nullptr, SW_SHOWDEFAULT);
                     }
                 }
                 // Free the loaded resource dll
                 FreeLibrary(hMod);
-                hMod = NULL;
+                hMod = nullptr;
             }
         }
     }
 
     // In case no dll was loaded, load the English translation from the executable
-    if (hMod == NULL) {
+    if (hMod == nullptr) {
         hMod = AfxGetApp()->m_hInstance;
         s.language = 0;
         // If a resource dll was supposed to be loaded we had an error
-        success = (languageResource.dllPath == NULL);
+        success = (languageResource.dllPath == nullptr);
     }
     // In case a dll was loaded, check if some special action is needed
     else if (languageResource.resourceID == ID_LANGUAGE_HEBREW) {
         // Hebrew needs the RTL flag.
         SetProcessDefaultLayout(LAYOUT_RTL);
-        SetWindowsHookEx(WH_CBT, RTLWindowsLayoutCbtFilterHook, NULL, GetCurrentThreadId());
+        SetWindowsHookEx(WH_CBT, RTLWindowsLayoutCbtFilterHook, nullptr, GetCurrentThreadId());
     }
 
     // Free the old resource if it was a dll

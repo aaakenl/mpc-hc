@@ -38,8 +38,12 @@ public IUnknown {
     STDMETHOD(EnableDownSamplingTo441)(bool fEnable) = 0;
     STDMETHOD_(REFERENCE_TIME, GetAudioTimeShift)() = 0;
     STDMETHOD(SetAudioTimeShift)(REFERENCE_TIME rtAudioTimeShift) = 0;
-    STDMETHOD(GetNormalizeBoost)(bool & fNormalize, bool & fNormalizeRecover, float & boost) = 0;
-    STDMETHOD(SetNormalizeBoost)(bool fNormalize, bool fNormalizeRecover, float boost) = 0;
+    // Deprecated
+    STDMETHOD(GetNormalizeBoost)(bool & fNormalize, bool & fNormalizeRecover, float & boost_dB) = 0;
+    // Deprecated
+    STDMETHOD(SetNormalizeBoost)(bool fNormalize, bool fNormalizeRecover, float boost_dB) = 0;
+    STDMETHOD(GetNormalizeBoost2)(bool & fNormalize, UINT & nMaxNormFactor, bool & fNormalizeRecover, UINT & nBoost) = 0;
+    STDMETHOD(SetNormalizeBoost2)(bool fNormalize, UINT nMaxNormFactor, bool fNormalizeRecover, UINT nBoost) = 0;
 };
 
 class AudioStreamResampler;
@@ -57,9 +61,9 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7"))
     bool m_fDownSampleTo441;
     REFERENCE_TIME m_rtAudioTimeShift;
     CAutoPtrArray<AudioStreamResampler> m_pResamplers;
-    double m_sample_max;
+    double m_normalizeFactor;
     bool m_fNormalize, m_fNormalizeRecover;
-    float m_boost_mul;
+    double m_nMaxNormFactor, m_boostFactor;
 
     REFERENCE_TIME m_rtNextStart, m_rtNextStop;
 
@@ -86,8 +90,12 @@ public:
     STDMETHODIMP EnableDownSamplingTo441(bool fEnable);
     STDMETHODIMP_(REFERENCE_TIME) GetAudioTimeShift();
     STDMETHODIMP SetAudioTimeShift(REFERENCE_TIME rtAudioTimeShift);
-    STDMETHODIMP GetNormalizeBoost(bool& fNormalize, bool& fNormalizeRecover, float& boost);
-    STDMETHODIMP SetNormalizeBoost(bool fNormalize, bool fNormalizeRecover, float boost);
+    // Deprecated
+    STDMETHODIMP GetNormalizeBoost(bool& fNormalize, bool& fNormalizeRecover, float& boost_dB);
+    // Deprecated
+    STDMETHODIMP SetNormalizeBoost(bool fNormalize, bool fNormalizeRecover, float boost_dB);
+    STDMETHODIMP GetNormalizeBoost2(bool& fNormalize, UINT& nMaxNormFactor, bool& fNormalizeRecover, UINT& nBoost);
+    STDMETHODIMP SetNormalizeBoost2(bool fNormalize, UINT nMaxNormFactor, bool fNormalizeRecover, UINT nBoost);
 
     // IAMStreamSelect
     STDMETHODIMP Enable(long lIndex, DWORD dwFlags);

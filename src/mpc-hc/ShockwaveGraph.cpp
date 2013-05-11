@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -33,13 +33,13 @@ CShockwaveGraph::CShockwaveGraph(HWND hParent, HRESULT& hr)
 {
     hr = S_OK;
 
-    if (!m_wndWindowFrame.Create(NULL, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-                                 CRect(0, 0, 0, 0), CWnd::FromHandle(hParent), 0, NULL)) {
+    if (!m_wndWindowFrame.Create(nullptr, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                 CRect(0, 0, 0, 0), CWnd::FromHandle(hParent), 0, nullptr)) {
         hr = E_FAIL;
         return;
     }
 
-    if (!m_wndDestFrame.Create(NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+    if (!m_wndDestFrame.Create(nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                                CRect(0, 0, 0, 0), &m_wndWindowFrame, 0)) {
         hr = E_FAIL;
         return;
@@ -177,7 +177,7 @@ STDMETHODIMP CShockwaveGraph::GetCurrentPosition(LONGLONG* pCurrent)
 STDMETHODIMP CShockwaveGraph::SetPositions(LONGLONG* pCurrent, DWORD dwCurrentFlags, LONGLONG* pStop, DWORD dwStopFlags)
 {
     if (dwCurrentFlags & AM_SEEKING_AbsolutePositioning) {
-        m_wndDestFrame.put_FrameNum(*pCurrent);
+        m_wndDestFrame.put_FrameNum((long)*pCurrent);
 
         if (m_fs == State_Running && !m_wndDestFrame.IsPlaying()) {
             m_wndDestFrame.Play();

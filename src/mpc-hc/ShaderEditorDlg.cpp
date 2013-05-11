@@ -38,7 +38,7 @@ END_MESSAGE_MAP()
 HBRUSH CShaderLabelComboBox::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
     if (nCtlColor == CTLCOLOR_EDIT) {
-        if (m_edit.GetSafeHwnd() == NULL) {
+        if (m_edit.GetSafeHwnd() == nullptr) {
             m_edit.SubclassWindow(pWnd->GetSafeHwnd());
         }
     }
@@ -48,7 +48,7 @@ HBRUSH CShaderLabelComboBox::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 void CShaderLabelComboBox::OnDestroy()
 {
-    if (m_edit.GetSafeHwnd() != NULL) {
+    if (m_edit.GetSafeHwnd() != nullptr) {
         m_edit.UnsubclassWindow();
     }
 
@@ -59,7 +59,7 @@ void CShaderLabelComboBox::OnDestroy()
 
 CShaderEdit::CShaderEdit()
 {
-    m_acdlg.Create(CShaderAutoCompleteDlg::IDD, NULL);
+    m_acdlg.Create(CShaderAutoCompleteDlg::IDD, nullptr);
 
     m_nEndChar = -1;
     m_nIDEvent = (UINT_PTR) - 1;
@@ -120,7 +120,7 @@ END_MESSAGE_MAP()
 void CShaderEdit::OnUpdate()
 {
     if (m_nIDEvent == (UINT_PTR) - 1) {
-        m_nIDEvent = SetTimer(1, 100, NULL);
+        m_nIDEvent = SetTimer(1, 100, nullptr);
     }
 
     CString text;
@@ -207,10 +207,10 @@ void CShaderEdit::OnTimer(UINT_PTR nIDEvent)
 // CShaderEditorDlg dialog
 
 CShaderEditorDlg::CShaderEditorDlg()
-    : CResizableDialog(CShaderEditorDlg::IDD, NULL)
+    : CResizableDialog(CShaderEditorDlg::IDD, nullptr)
     , m_fSplitterGrabbed(false)
-    , m_pPSC(NULL)
-    , m_pShader(NULL)
+    , m_pPSC(nullptr)
+    , m_pShader(nullptr)
     , m_nIDEventShader(0)
 {
 }
@@ -242,14 +242,15 @@ BOOL CShaderEditorDlg::Create(CWnd* pParent)
     m_targets.AddString(_T("ps_3_0"));
     m_targets.AddString(_T("ps_3_sw"));
 
-    POSITION pos = AfxGetAppSettings().m_shaders.GetHeadPosition();
+    const CAppSettings& s = AfxGetAppSettings();
+    POSITION pos = s.m_shaders.GetHeadPosition();
     while (pos) {
-        const CAppSettings::Shader& s = AfxGetAppSettings().m_shaders.GetNext(pos);
-        m_labels.SetItemDataPtr(m_labels.AddString(s.label), (void*)&s);
+        const CAppSettings::Shader& shader = s.m_shaders.GetNext(pos);
+        m_labels.SetItemDataPtr(m_labels.AddString(shader.label), (void*)&shader);
     }
     CorrectComboListWidth(m_labels);
 
-    m_nIDEventShader = SetTimer(1, 1000, NULL);
+    m_nIDEventShader = SetTimer(1, 1000, nullptr);
 
     return TRUE;
 }
@@ -330,16 +331,17 @@ void CShaderEditorDlg::OnCbnSelchangeCombo1()
             return;
         }
 
-        CAppSettings::Shader s;
-        s.label = label;
-        s.target = _T("ps_2_0");
-        s.srcdata = CString(srcdata);
+        CAppSettings::Shader shader;
+        shader.label = label;
+        shader.target = _T("ps_2_0");
+        shader.srcdata = CString(srcdata);
 
-        POSITION pos = AfxGetAppSettings().m_shaders.AddTail(s);
+        CAppSettings& s = AfxGetAppSettings();
+        POSITION pos = s.m_shaders.AddTail(shader);
 
-        i = m_labels.AddString(s.label);
+        i = m_labels.AddString(shader.label);
         m_labels.SetCurSel(i);
-        m_labels.SetItemDataPtr(i, (void*)&AfxGetAppSettings().m_shaders.GetAt(pos));
+        m_labels.SetItemDataPtr(i, (void*)&s.m_shaders.GetAt(pos));
     }
 
     m_pShader = (CAppSettings::Shader*)m_labels.GetItemDataPtr(i);
@@ -367,7 +369,7 @@ void CShaderEditorDlg::OnBnClickedButton2()
 
     for (POSITION pos = s.m_shaders.GetHeadPosition(); pos; s.m_shaders.GetNext(pos)) {
         if (m_pShader == &s.m_shaders.GetAt(pos)) {
-            m_pShader = NULL;
+            m_pShader = nullptr;
             s.m_shaders.RemoveAt(pos);
             int i = m_labels.GetCurSel();
             if (i >= 0) {
@@ -402,11 +404,11 @@ void CShaderEditorDlg::OnTimer(UINT_PTR nIDEvent)
             m_pShader->target = target;
 
             if (!m_pPSC) {
-                m_pPSC = DEBUG_NEW CPixelShaderCompiler(NULL);
+                m_pPSC = DEBUG_NEW CPixelShaderCompiler(nullptr);
             }
 
             CString disasm, errmsg;
-            HRESULT hr = m_pPSC->CompileShader(CStringA(srcdata), "main", CStringA(target), D3DXSHADER_DEBUG, NULL, &disasm, &errmsg);
+            HRESULT hr = m_pPSC->CompileShader(CStringA(srcdata), "main", CStringA(target), D3DXSHADER_DEBUG, nullptr, &disasm, &errmsg);
 
             if (SUCCEEDED(hr)) {
                 errmsg = _T("D3DXCompileShader succeeded\n");
@@ -422,7 +424,7 @@ void CShaderEditorDlg::OnTimer(UINT_PTR nIDEvent)
 
             // TODO: autosave
 
-            m_nIDEventShader = SetTimer(1, 1000, NULL);
+            m_nIDEventShader = SetTimer(1, 1000, nullptr);
         }
     }
 

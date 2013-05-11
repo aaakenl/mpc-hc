@@ -38,7 +38,7 @@ EXIT /B
 :SubInno
 ECHO.
 TITLE Building VSFilter installer...
-"%InnoSetupPath%\ISCC.exe" /Q "vsfilter_setup.iss" /D%1
+"%InnoSetupPath%\ISCC.exe" /Q "vsfilter_setup.iss" /D%1 /D%2
 IF %ERRORLEVEL% NEQ 0 GOTO EndWithError
 IF /I "%1%" == "x64Build" (
   ECHO Installer x64 compiled successfully!

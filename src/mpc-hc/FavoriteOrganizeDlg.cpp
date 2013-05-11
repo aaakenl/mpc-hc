@@ -28,7 +28,7 @@
 // CFavoriteOrganizeDlg dialog
 
 //IMPLEMENT_DYNAMIC(CFavoriteOrganizeDlg, CResizableDialog)
-CFavoriteOrganizeDlg::CFavoriteOrganizeDlg(CWnd* pParent /*=NULL*/)
+CFavoriteOrganizeDlg::CFavoriteOrganizeDlg(CWnd* pParent /*=nullptr*/)
     : CResizableDialog(CFavoriteOrganizeDlg::IDD, pParent)
 {
 }
@@ -136,9 +136,10 @@ BOOL CFavoriteOrganizeDlg::OnInitDialog()
     m_list.InsertColumn(1, _T(""));
     m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 
-    AfxGetAppSettings().GetFav(FAV_FILE, m_sl[0]);
-    AfxGetAppSettings().GetFav(FAV_DVD, m_sl[1]);
-    AfxGetAppSettings().GetFav(FAV_DEVICE, m_sl[2]);
+    const CAppSettings& s = AfxGetAppSettings();
+    s.GetFav(FAV_FILE, m_sl[0]);
+    s.GetFav(FAV_DVD, m_sl[1]);
+    s.GetFav(FAV_DEVICE, m_sl[2]);
 
     SetupList(false);
 
@@ -300,7 +301,7 @@ void CFavoriteOrganizeDlg::OnDeleteBnClicked()
     POSITION pos;
     int nItem = -1;
 
-    while ((pos = m_list.GetFirstSelectedItemPosition()) != NULL) {
+    while ((pos = m_list.GetFirstSelectedItemPosition()) != nullptr) {
         nItem = m_list.GetNextSelectedItem(pos);
         if (nItem < 0 || nItem >= m_list.GetItemCount()) {
             return;
@@ -337,10 +338,9 @@ void CFavoriteOrganizeDlg::MoveItem(int nItem, int offset)
 void CFavoriteOrganizeDlg::OnUpBnClicked()
 {
     POSITION pos = m_list.GetFirstSelectedItemPosition();
-    int nItem;
 
     while (pos) {
-        nItem = m_list.GetNextSelectedItem(pos);
+        int nItem = m_list.GetNextSelectedItem(pos);
         if (nItem <= 0 || nItem >= m_list.GetItemCount()) {
             return;
         }
@@ -390,9 +390,10 @@ void CFavoriteOrganizeDlg::OnBnClickedOk()
 {
     SetupList(true);
 
-    AfxGetAppSettings().SetFav(FAV_FILE, m_sl[0]);
-    AfxGetAppSettings().SetFav(FAV_DVD, m_sl[1]);
-    AfxGetAppSettings().SetFav(FAV_DEVICE, m_sl[2]);
+    CAppSettings& s = AfxGetAppSettings();
+    s.SetFav(FAV_FILE, m_sl[0]);
+    s.SetFav(FAV_DVD, m_sl[1]);
+    s.SetFav(FAV_DEVICE, m_sl[2]);
 
     OnOK();
 }

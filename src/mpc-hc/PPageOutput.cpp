@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -46,6 +46,8 @@ CPPageOutput::CPPageOutput()
     , m_fD3DFullscreen(FALSE)
     , m_fD3D9RenderDevice(FALSE)
     , m_iD3D9RenderDevice(-1)
+    , m_tick(nullptr)
+    , m_cross(nullptr)
 {
 }
 
@@ -109,7 +111,7 @@ BOOL CPPageOutput::OnInitDialog()
     SetHandCursor(m_hWnd, IDC_AUDRND_COMBO);
 
     const CAppSettings& s = AfxGetAppSettings();
-    const CRenderersSettings& renderersSettings = s.m_RenderersSettings;
+    const CRenderersSettings& r = s.m_RenderersSettings;
 
     m_iDSVideoRendererType  = s.iDSVideoRendererType;
     m_iRMVideoRendererType  = s.iRMVideoRendererType;
@@ -119,7 +121,7 @@ BOOL CPPageOutput::OnInitDialog()
     m_APSurfaceUsageCtrl.AddString(ResStr(IDS_PPAGE_OUTPUT_SURF_2D));
     m_APSurfaceUsageCtrl.AddString(ResStr(IDS_PPAGE_OUTPUT_SURF_3D));
     CorrectComboListWidth(m_APSurfaceUsageCtrl);
-    m_iAPSurfaceUsage       = renderersSettings.iAPSurfaceUsage;
+    m_iAPSurfaceUsage       = r.iAPSurfaceUsage;
 
     m_DX9ResizerCtrl.AddString(ResStr(IDS_PPAGE_OUTPUT_RESIZE_NN));
     m_DX9ResizerCtrl.AddString(ResStr(IDS_PPAGE_OUTPUT_RESIZER_BILIN));
@@ -127,20 +129,20 @@ BOOL CPPageOutput::OnInitDialog()
     m_DX9ResizerCtrl.AddString(ResStr(IDS_PPAGE_OUTPUT_RESIZER_BICUB1));
     m_DX9ResizerCtrl.AddString(ResStr(IDS_PPAGE_OUTPUT_RESIZER_BICUB2));
     m_DX9ResizerCtrl.AddString(ResStr(IDS_PPAGE_OUTPUT_RESIZER_BICUB3));
-    m_iDX9Resizer           = renderersSettings.iDX9Resizer;
+    m_iDX9Resizer           = r.iDX9Resizer;
 
-    m_fVMR9MixerMode        = renderersSettings.fVMR9MixerMode;
-    m_fVMR9MixerYUV         = renderersSettings.fVMR9MixerYUV;
-    m_fVMR9AlterativeVSync  = renderersSettings.m_AdvRendSets.fVMR9AlterativeVSync;
+    m_fVMR9MixerMode        = r.fVMR9MixerMode;
+    m_fVMR9MixerYUV         = r.fVMR9MixerYUV;
+    m_fVMR9AlterativeVSync  = r.m_AdvRendSets.fVMR9AlterativeVSync;
     m_fD3DFullscreen        = s.fD3DFullscreen;
 
-    int EVRBuffers[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45, 50, 55, 60};
+    int EVRBuffers[] = { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45, 50, 55, 60 };
     CString EVRBuffer;
     for (size_t i = 0; i < _countof(EVRBuffers); i++) {
         EVRBuffer.Format(_T("%d"), EVRBuffers[i]);
         m_EVRBuffersCtrl.AddString(EVRBuffer);
     }
-    m_iEvrBuffers.Format(_T("%d"), renderersSettings.iEvrBuffers);
+    m_iEvrBuffers.Format(_T("%d"), r.iEvrBuffers);
 
     m_iAudioRendererTypeCtrl.SetRedraw(FALSE);
     m_fResetDevice = s.m_RenderersSettings.fResetDevice;
@@ -152,7 +154,7 @@ BOOL CPPageOutput::OnInitDialog()
     CString Cbstr;
 
     BeginEnumSysDev(CLSID_AudioRendererCategory, pMoniker) {
-        LPOLESTR olestr = NULL;
+        LPOLESTR olestr = nullptr;
         if (FAILED(pMoniker->GetDisplayName(0, 0, &olestr))) {
             continue;
         }
@@ -165,12 +167,12 @@ BOOL CPPageOutput::OnInitDialog()
         CComPtr<IPropertyBag> pPB;
         if (SUCCEEDED(pMoniker->BindToStorage(0, 0, IID_IPropertyBag, (void**)&pPB))) {
             CComVariant var;
-            pPB->Read(CComBSTR(_T("FriendlyName")), &var, NULL);
+            pPB->Read(CComBSTR(_T("FriendlyName")), &var, nullptr);
 
             CString fstr(var.bstrVal);
 
             var.Clear();
-            if (SUCCEEDED(pPB->Read(CComBSTR(_T("FilterData")), &var, NULL))) {
+            if (SUCCEEDED(pPB->Read(CComBSTR(_T("FilterData")), &var, nullptr))) {
                 BSTR* pbstr;
                 if (SUCCEEDED(SafeArrayAccessData(var.parray, (void**)&pbstr))) {
                     fstr.Format(_T("%s (%08x)"), CString(fstr), *((DWORD*)pbstr + 1));
@@ -234,9 +236,9 @@ BOOL CPPageOutput::OnInitDialog()
                 if (::StringFromGUID2(adapterIdentifier.DeviceIdentifier, strGUID, 50) > 0) {
                     cstrGUID = strGUID;
                 }
-                if ((cstrGUID != _T(""))) {
+                if (!cstrGUID.IsEmpty()) {
                     boolean m_find = false;
-                    for (INT_PTR i = 0; (!m_find) && (i < m_D3D9GUIDNames.GetCount()); i++) {
+                    for (INT_PTR i = 0; !m_find && (i < m_D3D9GUIDNames.GetCount()); i++) {
                         if (m_D3D9GUIDNames.GetAt(i) == cstrGUID) {
                             m_find = true;
                         }
@@ -244,7 +246,7 @@ BOOL CPPageOutput::OnInitDialog()
                     if (!m_find) {
                         m_iD3D9RenderDeviceCtrl.AddString(d3ddevice_str);
                         m_D3D9GUIDNames.Add(cstrGUID);
-                        if (renderersSettings.D3D9RenderDevice == cstrGUID) {
+                        if (r.D3D9RenderDevice == cstrGUID) {
                             m_iD3D9RenderDevice = m_iD3D9RenderDeviceCtrl.GetCount() - 1;
                         }
                     }
@@ -324,7 +326,7 @@ BOOL CPPageOutput::OnInitDialog()
     m_tickcross.Create(16, 16, ILC_COLOR32, 2, 0);
     CMPCPngImage tickcross;
     tickcross.Load(IDF_TICKCROSS);
-    m_tickcross.Add(&tickcross, (CBitmap*)NULL);
+    m_tickcross.Add(&tickcross, (CBitmap*)nullptr);
     m_tick = m_tickcross.ExtractIcon(0);
     m_cross = m_tickcross.ExtractIcon(1);
 
@@ -392,25 +394,25 @@ BOOL CPPageOutput::OnApply()
         return FALSE;
     }
 
-    CRenderersSettings& renderersSettings                   = s.m_RenderersSettings;
-    s.iDSVideoRendererType                                  = m_iDSVideoRendererType;
-    s.iRMVideoRendererType                                  = m_iRMVideoRendererType;
-    s.iQTVideoRendererType                                  = m_iQTVideoRendererType;
-    renderersSettings.iAPSurfaceUsage                       = m_iAPSurfaceUsage;
-    renderersSettings.iDX9Resizer                           = m_iDX9Resizer;
-    renderersSettings.fVMR9MixerMode                        = !!m_fVMR9MixerMode;
-    renderersSettings.fVMR9MixerYUV                         = !!m_fVMR9MixerYUV;
-    renderersSettings.m_AdvRendSets.fVMR9AlterativeVSync = m_fVMR9AlterativeVSync != 0;
-    s.strAudioRendererDisplayName                           = m_AudioRendererDisplayNames[m_iAudioRendererType];
-    s.fD3DFullscreen                                        = m_fD3DFullscreen ? true : false;
+    CRenderersSettings& r                   = s.m_RenderersSettings;
+    s.iDSVideoRendererType                  = m_iDSVideoRendererType;
+    s.iRMVideoRendererType                  = m_iRMVideoRendererType;
+    s.iQTVideoRendererType                  = m_iQTVideoRendererType;
+    r.iAPSurfaceUsage                       = m_iAPSurfaceUsage;
+    r.iDX9Resizer                           = m_iDX9Resizer;
+    r.fVMR9MixerMode                        = !!m_fVMR9MixerMode;
+    r.fVMR9MixerYUV                         = !!m_fVMR9MixerYUV;
+    r.m_AdvRendSets.fVMR9AlterativeVSync    = m_fVMR9AlterativeVSync != 0;
+    s.strAudioRendererDisplayName           = m_AudioRendererDisplayNames[m_iAudioRendererType];
+    s.fD3DFullscreen                        = m_fD3DFullscreen ? true : false;
 
-    renderersSettings.fResetDevice = !!m_fResetDevice;
+    r.fResetDevice = !!m_fResetDevice;
 
-    if (m_iEvrBuffers.IsEmpty() || _stscanf_s(m_iEvrBuffers, _T("%d"), &renderersSettings.iEvrBuffers) != 1) {
-        renderersSettings.iEvrBuffers = 5;
+    if (m_iEvrBuffers.IsEmpty() || _stscanf_s(m_iEvrBuffers, _T("%d"), &r.iEvrBuffers) != 1) {
+        r.iEvrBuffers = 5;
     }
 
-    renderersSettings.D3D9RenderDevice = m_fD3D9RenderDevice ? m_D3D9GUIDNames[m_iD3D9RenderDevice] : _T("");
+    r.D3D9RenderDevice = m_fD3D9RenderDevice ? m_D3D9GUIDNames[m_iD3D9RenderDevice] : _T("");
 
     return __super::OnApply();
 }
@@ -687,7 +689,7 @@ void CPPageOutput::OnFullscreenCheck()
 {
     UpdateData();
     if (m_fD3DFullscreen &&
-            (MessageBox(ResStr(IDS_D3DFS_WARNING), NULL, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) == IDNO)) {
+            (MessageBox(ResStr(IDS_D3DFS_WARNING), nullptr, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) == IDNO)) {
         m_fD3DFullscreen = false;
         UpdateData(FALSE);
     } else {

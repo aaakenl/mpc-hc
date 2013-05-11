@@ -42,7 +42,7 @@ bool CVolumeCtrl::Create(CWnd* pParentWnd)
         return false;
     }
 
-    CAppSettings& s = AfxGetAppSettings();
+    const CAppSettings& s = AfxGetAppSettings();
     EnableToolTips(TRUE);
     SetRange(0, 100);
     SetPos(s.nVolume);
@@ -202,7 +202,7 @@ BOOL CVolumeCtrl::OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
     CString str;
     str.Format(_T("%d%%"), GetPos());
     _tcscpy_s(pTTT->szText, str);
-    pTTT->hinst = NULL;
+    pTTT->hinst = nullptr;
 
     *pResult = 0;
 

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -80,7 +80,7 @@ POSITION CPlaylistItem::FindFile(LPCTSTR path)
         }
         m_fns.GetNext(pos);
     }
-    return NULL;
+    return nullptr;
 }
 
 static CString StripPath(CString path)
@@ -146,12 +146,14 @@ void CPlaylistItem::AutoLoadFiles()
         return;
     }
 
+    const CAppSettings& s = AfxGetAppSettings();
+
     CString fn = m_fns.GetHead();
 
-    if (AfxGetAppSettings().fAutoloadAudio && fn.Find(_T("://")) < 0) {
+    if (s.fAutoloadAudio && fn.Find(_T("://")) < 0) {
         int i = fn.ReverseFind('.');
         if (i > 0) {
-            CMediaFormats& mf = AfxGetAppSettings().m_Formats;
+            const CMediaFormats& mf = s.m_Formats;
 
             CString ext = fn.Mid(i + 1).MakeLower();
 
@@ -182,27 +184,28 @@ void CPlaylistItem::AutoLoadFiles()
         }
     }
 
-    if (AfxGetAppSettings().fAutoloadSubtitles) {
-        CString& pathList = AfxGetAppSettings().strSubtitlePaths;
+    if (s.fAutoloadSubtitles) {
+        const CString& pathList = s.strSubtitlePaths;
 
         CAtlArray<CString> paths;
 
         int pos = 0;
         do {
             CString path = pathList.Tokenize(_T(";"), pos);
-            paths.Add(path);
+            if (!path.IsEmpty()) {
+                paths.Add(path);
+            }
         } while (pos != -1);
 
         CString dir = fn;
         dir.Replace('\\', '/');
-        int l = fn.GetLength(), l2 = l;
-        l2 = dir.ReverseFind('.');
-        l = dir.ReverseFind('/') + 1;
-        if (l2 < l) {
-            l2 = l;
+        int l  = dir.ReverseFind('/') + 1;
+        int l2 = dir.ReverseFind('.');
+        if (l2 < l) { // no extension, read to the end
+            l2 = fn.GetLength();
         }
         CString title = dir.Mid(l, l2 - l);
-        paths.Add(title.GetString());
+        paths.Add(title);
 
         CAtlArray<SubFile> ret;
         GetSubFileNames(fn, paths, ret);
@@ -220,7 +223,7 @@ void CPlaylistItem::AutoLoadFiles()
 //
 
 CPlaylist::CPlaylist()
-    : m_pos(NULL)
+    : m_pos(nullptr)
 {
 }
 
@@ -231,8 +234,8 @@ CPlaylist::~CPlaylist()
 bool CPlaylist::RemoveAll()
 {
     __super::RemoveAll();
-    bool bWasPlaying = (m_pos != NULL);
-    m_pos = NULL;
+    bool bWasPlaying = (m_pos != nullptr);
+    m_pos = nullptr;
     return bWasPlaying;
 }
 
@@ -241,7 +244,7 @@ bool CPlaylist::RemoveAt(POSITION pos)
     if (pos) {
         __super::RemoveAt(pos);
         if (m_pos == pos) {
-            m_pos = NULL;
+            m_pos = nullptr;
             return true;
         }
     }
@@ -331,7 +334,7 @@ void CPlaylist::Randomize()
 {
     CAtlArray<plsort_t> a;
     a.SetCount(GetCount());
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)time(nullptr));
     POSITION pos = GetHeadPosition();
     for (int i = 0; pos; i++, GetNext(pos)) {
         a[i].n = rand(), a[i].pos = pos;
@@ -376,7 +379,7 @@ POSITION CPlaylist::Shuffle()
         }
 
         //Use Fisher-Yates shuffle algorithm
-        srand((unsigned)time(NULL));
+        srand((unsigned)time(nullptr));
         for (INT_PTR i = 0; i < (count - 1); i++) {
             INT_PTR r = i + (rand() % (count - i));
             POSITION temp = a[i].pos;

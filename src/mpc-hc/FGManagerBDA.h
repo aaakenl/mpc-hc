@@ -1,5 +1,5 @@
 /*
- * (C) 2009-2012 see Authors.txt
+ * (C) 2009-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -85,10 +85,9 @@ private:
     ULONG                   m_ulMappedPID;
 
     void ClearMaps() {
-        HRESULT hr;
         CComPtr<IEnumPIDMap> pEnumMap;
 
-        if (SUCCEEDED(hr = m_pMap->EnumPIDMap(&pEnumMap))) {
+        if (SUCCEEDED(m_pMap->EnumPIDMap(&pEnumMap))) {
             PID_MAP maps[8];
             ULONG   nbPids = 0;
 
@@ -135,7 +134,9 @@ private:
 
     CComQIPtr<IBDA_DeviceControl>        m_pBDAControl;
     CComPtr<IBDA_FrequencyFilter>        m_pBDAFreq;
-    CComPtr<IBDA_SignalStatistics>       m_pBDAStats;
+    CComQIPtr<IBDA_SignalStatistics>     m_pBDATunerStats;
+    CComPtr<IBDA_DigitalDemodulator>     m_pBDADemodulator;
+    CComQIPtr<IBDA_SignalStatistics>     m_pBDADemodStats;
     CAtlMap<DVB_STREAM_TYPE, CDVBStream> m_DVBStreams;
 
     DVB_STREAM_TYPE m_nCurVideoType;
@@ -143,15 +144,17 @@ private:
     CString         m_BDANetworkProvider;
     bool            m_fHideWindow;
     bool            m_fSetChannelActive;
-    CComPtr<IPin>   m_pPin_h264;
+    CComPtr<IBaseFilter> m_pDemux;
 
     HRESULT         CreateKSFilter(IBaseFilter** ppBF, CLSID KSCategory, const CStringW& DisplayName);
     HRESULT         ConnectFilters(IBaseFilter* pOutFiter, IBaseFilter* pInFilter);
     HRESULT         CreateMicrosoftDemux(CComPtr<IBaseFilter>& pMpeg2Demux);
     HRESULT         SetChannelInternal(CDVBChannel* pChannel);
-    HRESULT         SwitchStream(DVB_STREAM_TYPE& nOldType, DVB_STREAM_TYPE nNewType);
+    HRESULT         SwitchStream(DVB_STREAM_TYPE nOldType, DVB_STREAM_TYPE nNewType);
     HRESULT         ChangeState(FILTER_STATE nRequested);
+    HRESULT         ClearMaps();
     FILTER_STATE    GetState();
+    void UpdateMediaType(VIDEOINFOHEADER2* NewVideoHeader, CDVBChannel* pChannel);
 
     template <class ITF>
     HRESULT SearchIBDATopology(const CComPtr<IBaseFilter>& pTuner, CComPtr<ITF>& pItf) {

@@ -42,8 +42,9 @@ CWebServer::CWebServer(CMainFrame* pMainFrame, int nPort)
     , m_nPort(nPort)
 {
     m_webroot = CPath(GetProgramPath());
+    const CAppSettings& s = AfxGetAppSettings();
 
-    CString WebRoot = AfxGetAppSettings().strWebRoot;
+    CString WebRoot = s.strWebRoot;
     WebRoot.Replace('/', '\\');
     WebRoot.Trim();
     CPath p(WebRoot);
@@ -59,7 +60,7 @@ CWebServer::CWebServer(CMainFrame* pMainFrame, int nPort)
     }
 
     CAtlList<CString> sl;
-    Explode(AfxGetAppSettings().strWebServerCGI, sl, ';');
+    Explode(s.strWebServerCGI, sl, ';');
     POSITION pos = sl.GetHeadPosition();
     while (pos) {
         CAtlList<CString> sl2;
@@ -71,12 +72,12 @@ CWebServer::CWebServer(CMainFrame* pMainFrame, int nPort)
     }
 
     m_ThreadId = 0;
-    m_hThread = ::CreateThread(NULL, 0, StaticThreadProc, (LPVOID)this, 0, &m_ThreadId);
+    m_hThread = ::CreateThread(nullptr, 0, StaticThreadProc, (LPVOID)this, 0, &m_ThreadId);
 }
 
 CWebServer::~CWebServer()
 {
-    if (m_hThread != NULL) {
+    if (m_hThread != nullptr) {
         PostThreadMessage(m_ThreadId, WM_QUIT, 0, 0);
         if (WaitForSingleObject(m_hThread, 10000) == WAIT_TIMEOUT) {
             TerminateThread(m_hThread, 0xDEAD);
@@ -169,14 +170,14 @@ DWORD WINAPI CWebServer::StaticThreadProc(LPVOID lpParam)
 
 DWORD CWebServer::ThreadProc()
 {
-    if (!AfxSocketInit(NULL)) {
+    if (!AfxSocketInit(nullptr)) {
         return (DWORD) - 1;
     }
 
     CWebServerSocket s(this, m_nPort);
 
     MSG msg;
-    while ((int)GetMessage(&msg, NULL, 0, 0) > 0) {
+    while ((int)GetMessage(&msg, nullptr, 0, 0) > 0) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -186,7 +187,7 @@ DWORD CWebServer::ThreadProc()
 
 static void PutFileContents(LPCTSTR fn, const CStringA& data)
 {
-    FILE* f = NULL;
+    FILE* f = nullptr;
     if (!_tfopen_s(&f, fn, _T("wb"))) {
         fwrite((LPCSTR)data, 1, data.GetLength(), f);
         fclose(f);
@@ -219,7 +220,7 @@ void CWebServer::Deploy(CString dir)
     }
 
     // Create the needed folder
-    CreateDirectory(dir + _T("img"),  NULL);
+    CreateDirectory(dir + _T("img"),  nullptr);
 
     POSITION pos = m_downloads.GetStartPosition();
     while (pos) {
@@ -276,7 +277,7 @@ bool CWebServer::LoadPage(UINT resid, CStringA& str, CString path)
 {
     CString redir;
     if (ToLocalPath(path, redir)) {
-        FILE* f = NULL;
+        FILE* f = nullptr;
         if (!_tfopen_s(&f, path, _T("rb"))) {
             fseek(f, 0, 2);
             char* buff = str.GetBufferSetLength(ftell(f));
@@ -319,6 +320,8 @@ void CWebServer::OnClose(CWebClientSocket* pClient)
 
 void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& body)
 {
+    const CAppSettings& s = AfxGetAppSettings();
+
     CPath p(AToT(pClient->m_path));
     CStringA ext = p.GetExtension().MakeLower();
     CStringA mime;
@@ -361,7 +364,7 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
         }
     }
 
-    RequestHandler rh = NULL;
+    RequestHandler rh = nullptr;
     if (!fHandled && m_internalpages.Lookup(pClient->m_path, rh) && (pClient->*rh)(hdr, body, mime)) {
         if (mime.IsEmpty()) {
             mime = "text/html";
@@ -411,7 +414,7 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
                 "Pragma: no-cache\r\n";
 
             CStringA debug;
-            if (AfxGetAppSettings().fWebServerPrintDebugInfo) {
+            if (s.fWebServerPrintDebugInfo) {
                 debug += "<br><hr>\r\n";
                 debug += "<div id=\"debug\">";
 
@@ -472,7 +475,7 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
     }
 
     // gzip
-    if (AfxGetAppSettings().fWebServerUseCompression && !body.IsEmpty()
+    if (s.fWebServerUseCompression && !body.IsEmpty()
             && hdr.Find("Content-Encoding:") < 0 && ext != ".png" && ext != ".jpeg" && ext != ".gif")
         do {
             CStringA accept_encoding;
@@ -556,8 +559,8 @@ bool CWebServer::CallCGI(CWebClientSocket* pClient, CStringA& hdr, CStringA& bod
     }
 
     HANDLE hProcess = GetCurrentProcess();
-    HANDLE hChildStdinRd, hChildStdinWr, hChildStdinWrDup = NULL;
-    HANDLE hChildStdoutRd, hChildStdoutWr, hChildStdoutRdDup = NULL;
+    HANDLE hChildStdinRd, hChildStdinWr, hChildStdinWrDup = nullptr;
+    HANDLE hChildStdoutRd, hChildStdoutWr, hChildStdoutRdDup = nullptr;
 
     SECURITY_ATTRIBUTES saAttr;
     ZeroMemory(&saAttr, sizeof(saAttr));
@@ -656,18 +659,18 @@ bool CWebServer::CallCGI(CWebClientSocket* pClient, CStringA& hdr, CStringA& bod
 
     if (hChildStdinRd && hChildStdoutWr)
         if (CreateProcess(
-                    NULL, cmdln, NULL, NULL, TRUE, 0,
-                    envstr.GetLength() ? (LPVOID)(LPCSTR)envstr : NULL,
+                    nullptr, cmdln, nullptr, nullptr, TRUE, 0,
+                    envstr.GetLength() ? (LPVOID)(LPCSTR)envstr : nullptr,
                     dir, &siStartInfo, &piProcInfo)) {
             DWORD ThreadId;
-            CreateThread(NULL, 0, KillCGI, (LPVOID)piProcInfo.hProcess, 0, &ThreadId);
+            CreateThread(nullptr, 0, KillCGI, (LPVOID)piProcInfo.hProcess, 0, &ThreadId);
 
             static const int BUFFSIZE = 1024;
             DWORD dwRead, dwWritten = 0;
 
             int i = 0, len = pClient->m_data.GetLength();
             for (; i < len; i += dwWritten) {
-                if (!WriteFile(hChildStdinWrDup, (LPCSTR)pClient->m_data + i, min(len - i, BUFFSIZE), &dwWritten, NULL)) {
+                if (!WriteFile(hChildStdinWrDup, (LPCSTR)pClient->m_data + i, min(len - i, BUFFSIZE), &dwWritten, nullptr)) {
                     break;
                 }
             }
@@ -678,7 +681,7 @@ bool CWebServer::CallCGI(CWebClientSocket* pClient, CStringA& hdr, CStringA& bod
             body.Empty();
 
             CStringA buff;
-            while (i == len && ReadFile(hChildStdoutRdDup, buff.GetBuffer(BUFFSIZE), BUFFSIZE, &dwRead, NULL) && dwRead) {
+            while (i == len && ReadFile(hChildStdoutRdDup, buff.GetBuffer(BUFFSIZE), BUFFSIZE, &dwRead, nullptr) && dwRead) {
                 buff.ReleaseBufferSetLength(dwRead);
                 body += buff;
             }

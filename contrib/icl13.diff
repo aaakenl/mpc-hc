@@ -1,18 +1,18 @@
 diff --git a/build.bat b/build.bat
-index fd206f9..5ceed1c 100644
+index 50ad683..ddf5e4d 100644
 --- a/build.bat
 +++ b/build.bat
-@@ -363,7 +363,7 @@ IF /I "%~2" == "Win32" (
+@@ -365,7 +365,7 @@ IF /I "%~2" == "Win32" (
  
  PUSHD "%BIN_DIR%"
  
 -SET "PCKG_NAME=%NAME%.%MPCHC_VER%.%ARCH%"
 +SET "PCKG_NAME=%NAME%.%MPCHC_VER%.%ARCH%.ICL13"
- IF /I "%COMPILER%" == "VS2012" (SET "PCKG_NAME=%PCKG_NAME%.%COMPILER%")
  IF DEFINED MPCHC_LITE (SET "PCKG_NAME=%PCKG_NAME%.Lite")
+ IF /I "%COMPILER%" == "VS2012" (SET "PCKG_NAME=%PCKG_NAME%.%COMPILER%")
  
 diff --git a/distrib/mpc-hc_setup.iss b/distrib/mpc-hc_setup.iss
-index 4e33881..a4bbeb8 100644
+index aa1cc36..620ee16 100644
 --- a/distrib/mpc-hc_setup.iss
 +++ b/distrib/mpc-hc_setup.iss
 @@ -41,7 +41,7 @@
@@ -24,37 +24,27 @@ index 4e33881..a4bbeb8 100644
  
  
  ; From now on you shouldn't need to change anything
-@@ -74,6 +74,8 @@
-   #define OutFilename  = app_name + "." + app_version + ".x86"
+@@ -81,6 +81,8 @@
+   #define OutFilename   = app_name + "." + app_ver + ".x86"
  #endif
  
-+#define OutFilename  = OutFilename + ".ICL13"
++#define OutFilename     = OutFilename + ".ICL13"
 +
- #if localize != "true" && defined(MPCHC_LITE)
-   #define OutFilename  = OutFilename + ".Lite"
- #elif localize != "true"
-@@ -91,15 +93,15 @@
- 
- #ifdef x64Build
-   #ifdef MPCHC_LITE
--    #define FullAppNameVer = app_vername + " " + app_verhash + "Lite (64-bit)"
-+    #define FullAppNameVer = app_vername + " " + app_verhash + "Lite (ICL13, 64-bit)"
-   #else
--    #define FullAppNameVer = app_vername + " " + app_verhash + " (64-bit)"
-+    #define FullAppNameVer = app_vername + " " + app_verhash + " (ICL13, 64-bit)"
-   #endif
- #else
-   #ifdef MPCHC_LITE
--    #define FullAppNameVer = app_vername + " " + app_verhash + " Lite"
-+    #define FullAppNameVer = app_vername + " " + app_verhash + " Lite (ICL13)"
-   #else
--    #define FullAppNameVer = app_vername + " " + app_verhash
-+    #define FullAppNameVer = app_vername + " " + app_verhash + " (ICL13)"
-   #endif
+ #ifnexist bindir + "\" + mpchc_exe
+   #error Compile MPC-HC first
  #endif
- 
+@@ -109,6 +111,9 @@
+ #ifdef MPCHC_LITE
+   #define FullAppNameVer = FullAppNameVer + " " + "Lite"
+ #endif
++
++#define FullAppNameVer = FullAppNameVer + " " + "ICL13"
++
+ #ifdef x64Build
+   #define FullAppNameVer = FullAppNameVer + " " + "(64-bit)"
+ #endif
 diff --git a/docs/Readme.txt b/docs/Readme.txt
-index d1da4ec..66bafe4 100644
+index 8e4ed5e..5c47921 100644
 --- a/docs/Readme.txt
 +++ b/docs/Readme.txt
 @@ -27,7 +27,7 @@ Main Features:
@@ -67,10 +57,10 @@ index d1da4ec..66bafe4 100644
  
  
 diff --git a/src/common.props b/src/common.props
-index d1ae499..910b23b 100644
+index c6ba69d..57047a3 100644
 --- a/src/common.props
 +++ b/src/common.props
-@@ -46,11 +46,14 @@
+@@ -47,11 +47,14 @@
        <SubSystem>Windows</SubSystem>
        <TargetMachine Condition="'$(Platform)'=='Win32'">MachineX86</TargetMachine>
        <TargetMachine Condition="'$(Platform)'=='x64'">MachineX64</TargetMachine>
@@ -85,7 +75,7 @@ index d1ae499..910b23b 100644
      </ResourceCompile>
    </ItemDefinitionGroup>
    <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug' Or '$(Configuration)'=='Debug Filter' Or '$(Configuration)'=='Debug Lite'">
-@@ -72,24 +75,27 @@
+@@ -73,24 +76,27 @@
    <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='Release Filter' Or '$(Configuration)'=='Release Lite'">
      <ClCompile>
        <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -119,11 +109,11 @@ index d1ae499..910b23b 100644
        <OptimizeReferences>true</OptimizeReferences>
        <SetChecksum>true</SetChecksum>
 diff --git a/src/filters/transform/VSFilter/installer/vsfilter_setup.iss b/src/filters/transform/VSFilter/installer/vsfilter_setup.iss
-index 9f6e097..d647503 100644
+index 16d9cc7..2f9cf41 100644
 --- a/src/filters/transform/VSFilter/installer/vsfilter_setup.iss
 +++ b/src/filters/transform/VSFilter/installer/vsfilter_setup.iss
-@@ -34,7 +34,7 @@
- #define app_version str(VerMajor) + "." + str(VerMinor) + "." + str(MPC_VERSION_REV)
+@@ -25,7 +25,7 @@
+ #endif
  
  ; If you want to compile the 64-bit version define "x64Build" (uncomment the define below or use build.bat)
 -#define sse_required
@@ -131,55 +121,40 @@ index 9f6e097..d647503 100644
  ;#define VS2012
  ;#define x64Build
  
-@@ -57,7 +57,7 @@
+@@ -58,6 +58,8 @@
+   #define OutFilename   = app_name + "_" + app_version + "_x86"
  #endif
  
- #if defined(VS2012)
--  #define OutFilename  = OutFilename + ".VS2012"
-+  #define OutFilename  = OutFilename + ".ICL13"
++#define OutFilename     = OutFilename + ".ICL13"
++
+ #ifnexist bindir + "\VSFilter.dll"
+   #error Compile VSFilter first
  #endif
- 
- 
-@@ -100,10 +100,10 @@ MinVersion=5.01.2600sp3
- AppID=vsfilter64
- ArchitecturesAllowed=x64
- ArchitecturesInstallIn64BitMode=x64
--UninstallDisplayName=DirectVobSub {#app_version} (64-bit)
-+UninstallDisplayName=DirectVobSub {#app_version} (ICL13, 64-bit)
- #else
- AppID=vsfilter
--UninstallDisplayName=DirectVobSub {#app_version}
-+UninstallDisplayName=DirectVobSub {#app_version} (ICL13)
+@@ -75,6 +77,9 @@
+ #if MPC_BETA_RELEASE
+   #define FullAppNameVer = FullAppNameVer + " " + str(MPC_VERSION_BETA)
  #endif
- 
- 
-@@ -113,9 +113,9 @@ Name: en; MessagesFile: compiler:Default.isl
- 
- [Messages]
++
++#define FullAppNameVer = FullAppNameVer + " " + "ICL13"
++
  #ifdef x64Build
--BeveledLabel=DirectVobSub {#app_version} (64-bit)
-+BeveledLabel=DirectVobSub {#app_version} (ICL13, 64-bit)
- #else
--BeveledLabel=DirectVobSub {#app_version}
-+BeveledLabel=DirectVobSub {#app_version} (ICL13)
+   #define FullAppNameVer = FullAppNameVer + " " + "(64-bit)"
  #endif
- SetupAppTitle=Setup - DirectVobSub
- SetupWindowTitle=Setup - DirectVobSub
 diff --git a/src/platform.props b/src/platform.props
-index 09927fd..26091c9 100644
+index 7da55ea..dd03fbf 100644
 --- a/src/platform.props
 +++ b/src/platform.props
-@@ -1,6 +1,6 @@
+@@ -1,7 +1,7 @@
  <?xml version="1.0" encoding="utf-8"?>
  <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
--  <PropertyGroup Label="Configuration" Condition="'$(VisualStudioVersion)'=='11.0'">
--    <PlatformToolset>v110_xp</PlatformToolset>
-+  <PropertyGroup Label="Configuration">
-+    <PlatformToolset>Intel C++ Compiler XE 13.0</PlatformToolset>
+   <PropertyGroup Label="Configuration">
+-    <PlatformToolset Condition="'$(VisualStudioVersion)'=='11.0' And '$(ANALYZE)'!='true'">v110_xp</PlatformToolset>
++    <PlatformToolset Condition="'$(VisualStudioVersion)'=='11.0' And '$(ANALYZE)'!='true'">Intel C++ Compiler XE 13.0</PlatformToolset>
+     <PlatformToolset Condition="'$(VisualStudioVersion)'=='11.0' And '$(ANALYZE)'=='true'">v110</PlatformToolset>
    </PropertyGroup>
  </Project>
 diff --git a/src/thirdparty/ffmpeg/Makefile b/src/thirdparty/ffmpeg/Makefile
-index b684c3d..e644447 100644
+index b684c3d..abe7607 100644
 --- a/src/thirdparty/ffmpeg/Makefile
 +++ b/src/thirdparty/ffmpeg/Makefile
 @@ -58,7 +58,7 @@ ifeq ($(64BIT),yes)

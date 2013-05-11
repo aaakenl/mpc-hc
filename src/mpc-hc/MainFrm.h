@@ -150,8 +150,7 @@ class CMainFrame : public CFrameWnd, public CDropTarget
         TIMER_STATS,
         TIMER_LEFTCLICK,
         TIMER_STATUSERASER,
-        TIMER_DVBINFO_UPDATER,
-		TIMER_MOUSEHIDER
+        TIMER_DVBINFO_UPDATER
     };
     enum {
         SEEK_DIRECTION_NONE,
@@ -197,7 +196,7 @@ class CMainFrame : public CFrameWnd, public CDropTarget
     CComPtr<ISubPicAllocatorPresenter> m_pCAP;
     CComPtr<ISubPicAllocatorPresenter2> m_pCAP2;
 
-    void SetVolumeBoost(float fAudioBoost_dB);
+    void SetVolumeBoost(UINT nAudioBoost);
     void SetBalance(int balance);
 
     // subtitles
@@ -363,7 +362,7 @@ public:
     bool IsSomethingLoaded() const {
         return ((m_iMediaLoadState == MLS_LOADING || m_iMediaLoadState == MLS_LOADED) && !IsD3DFullScreenMode());
     }
-    bool IsPlaylistEmpty() {
+    bool IsPlaylistEmpty() const {
         return (m_wndPlaylistBar.GetCount() == 0);
     }
     bool IsInteractiveVideo() const {
@@ -433,7 +432,7 @@ public:
     void CloseMedia();
     void StartTunerScan(CAutoPtr<TunerScanData> pTSD);
     void StopTunerScan();
-    void SetChannel(bool bNewList = true);
+    HRESULT SetChannel(int nChannel);
 
     void AddCurDevToPlaylist();
 
@@ -459,7 +458,7 @@ public:
     bool LoadSubtitle(CString fn, ISubStream** actualStream = NULL, bool bAutoLoad = false);
     bool SetSubtitle(int i, bool bIsOffset = false, bool bDisplayMessage = false, bool bApplyDefStyle = false);
     void SetSubtitle(ISubStream* pSubStream, bool bApplyDefStyle = false);
-    void ToogleSubtitleOnOff(bool bDisplayMessage = false);
+    void ToggleSubtitleOnOff(bool bDisplayMessage = false);
     void ReplaceSubtitle(ISubStream* pSubStreamOld, ISubStream* pSubStreamNew);
     void InvalidateSubtitle(DWORD_PTR nSubtitleId = -1, REFERENCE_TIME rtInvalidate = -1);
     void ReloadSubtitle();
@@ -899,6 +898,8 @@ public:
     bool        m_bToggleShaderScreenSpace;
     bool        m_bInOptions;
     bool        m_bStopTunerScan;
+    bool        m_bLockedZoomVideoWindow;
+    int         m_nLockedZoomVideoWindow;
 
     void        SetLoadState(MPC_LOADSTATE iState);
     void        SetPlayState(MPC_PLAYSTATE iState);

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -264,11 +264,11 @@ HRESULT WINAPI Mine_CoCreateInstance(IN REFCLSID rclsid, IN LPUNKNOWN pUnkOuter,
         if (rclsid == CLSID_VideoMixingRenderer || rclsid == CLSID_VideoMixingRenderer9
                 || rclsid == CLSID_VideoRenderer || rclsid == CLSID_VideoRendererDefault
                 || rclsid == CLSID_OverlayMixer) { // || rclsid == CLSID_OverlayMixer2 - where is this declared?)
-            CMacrovisionKicker* pMK = DEBUG_NEW CMacrovisionKicker(NAME("CMacrovisionKicker"), NULL);
+            CMacrovisionKicker* pMK = DEBUG_NEW CMacrovisionKicker(NAME("CMacrovisionKicker"), nullptr);
             CComPtr<IUnknown> pUnk = (IUnknown*)(INonDelegatingUnknown*)pMK;
             CComPtr<IUnknown> pInner;
-            HRESULT hr;
-            if (SUCCEEDED(hr = Real_CoCreateInstance(rclsid, pUnk, dwClsContext, __uuidof(IUnknown), (void**)&pInner))) {
+
+            if (SUCCEEDED(Real_CoCreateInstance(rclsid, pUnk, dwClsContext, __uuidof(IUnknown), (void**)&pInner))) {
                 pMK->SetInner(pInner);
                 return pUnk->QueryInterface(riid, ppv);
             }
@@ -519,7 +519,7 @@ LONG WINAPI Mine_RegSetValueExW(HKEY a0, LPCWSTR a1, DWORD a2, DWORD a3, BYTE* a
 // CFilterMapper2
 //
 
-IFilterMapper2* CFilterMapper2::m_pFilterMapper2 = NULL;
+IFilterMapper2* CFilterMapper2::m_pFilterMapper2 = nullptr;
 
 bool CFilterMapper2::fInitialized = false;
 
@@ -602,16 +602,16 @@ STDMETHODIMP CFilterMapper2::NonDelegatingQueryInterface(REFIID riid, void** ppv
 void CFilterMapper2::Register(CString path)
 {
     // Load filter
-    if (HMODULE h = LoadLibraryEx(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) {
+    if (HMODULE h = LoadLibraryEx(path, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH)) {
         typedef HRESULT(__stdcall * PDllRegisterServer)();
         if (PDllRegisterServer p = (PDllRegisterServer)GetProcAddress(h, "DllRegisterServer")) {
-            ASSERT(CFilterMapper2::m_pFilterMapper2 == NULL);
+            ASSERT(CFilterMapper2::m_pFilterMapper2 == nullptr);
 
             CFilterMapper2::m_pFilterMapper2 = this;
             m_path = path;
             p();
             m_path.Empty();
-            CFilterMapper2::m_pFilterMapper2 = NULL;
+            CFilterMapper2::m_pFilterMapper2 = nullptr;
         }
 
         FreeLibrary(h);

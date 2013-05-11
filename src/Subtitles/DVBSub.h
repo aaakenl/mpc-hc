@@ -1,5 +1,5 @@
 /*
- * (C) 2009-2012 see Authors.txt
+ * (C) 2009-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -96,8 +96,13 @@ public:
         DVB_DISPLAY() {
             // Default value (section 5.1.3)
             version_number = 0;
+            display_window_flag = 0;
             width          = 720;
             height         = 576;
+            horizontal_position_minimun = 0;
+            horizontal_position_maximum = 0;
+            vertical_position_minimun = 0;
+            vertical_position_maximum = 0;
         }
     };
 
@@ -180,13 +185,13 @@ public:
 
         ~DVB_PAGE() {
             CompositionObject* pObject;
-            while (objects.GetCount() > 0) {
+            while (!objects.IsEmpty()) {
                 pObject = objects.RemoveHead();
                 delete pObject;
             }
 
             DVB_CLUT* pCLUT;
-            while (CLUTs.GetCount() > 0) {
+            while (!CLUTs.IsEmpty()) {
                 pCLUT = CLUTs.RemoveHead();
                 delete pCLUT;
             }
@@ -220,4 +225,6 @@ private:
 
     HRESULT             EnqueuePage(REFERENCE_TIME rtStop);
     HRESULT             UpdateTimeStamp(REFERENCE_TIME rtStop);
+
+    void                RemoveOldPages(REFERENCE_TIME rt);
 };

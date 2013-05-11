@@ -1,5 +1,5 @@
 /*
- * (C) 2008-2012 see Authors.txt
+ * (C) 2008-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -46,7 +46,7 @@ bool CRealTextParser::ParseRealText(wstring p_szFile)
     list<Tag> listTags;
     list<Tag> listPreviousOpenTags;
 
-    while (p_szFile.length() > 0) {
+    while (!p_szFile.empty()) {
         if (p_szFile.at(0) == '<') {
             Tag oTag;
             if (!ExtractTag(p_szFile, oTag)) {
@@ -72,7 +72,7 @@ bool CRealTextParser::ParseRealText(wstring p_szFile)
                         pairTimecodes.second = pairTimecodes.first + m_iDefaultSubtitleDurationInMillisecs;
                     }
 
-                    if (szLine.length() > 0) {
+                    if (!szLine.empty()) {
                         m_RealText.m_mapLines[pairTimecodes] = szLine;
                     }
 
@@ -80,7 +80,7 @@ bool CRealTextParser::ParseRealText(wstring p_szFile)
                 } else if (!vStartTimecodes.empty() && !vEndTimecodes.empty()) {
                     pair<int, int> pairTimecodes(vStartTimecodes.back(), vEndTimecodes.back());
 
-                    if (szLine.length() > 0) {
+                    if (!szLine.empty()) {
                         m_RealText.m_mapLines[pairTimecodes] = szLine;
                     }
 
@@ -117,7 +117,7 @@ bool CRealTextParser::ParseRealText(wstring p_szFile)
                 m_RealText.m_bCenter = true;
             } else if (oTag.m_szName == L"required") {
                 // Ignore
-            } else if (oTag.m_szName == L"") {
+            } else if (oTag.m_szName.empty()) {
                 // Ignore
             } else {
                 // assume formating tag (handled later)
@@ -140,7 +140,7 @@ bool CRealTextParser::ParseRealText(wstring p_szFile)
     if (bPrevEndTimeMissing) {
         pair<int, int> pairTimecodes(vStartTimecodes.back(), vStartTimecodes.back() + m_iDefaultSubtitleDurationInMillisecs);
 
-        if (szLine.length() > 0) {
+        if (!szLine.empty()) {
             m_RealText.m_mapLines[pairTimecodes] = szLine;
         }
 
@@ -148,7 +148,7 @@ bool CRealTextParser::ParseRealText(wstring p_szFile)
     } else if (!vStartTimecodes.empty() && !vEndTimecodes.empty()) {
         pair<int, int> pairTimecodes(vStartTimecodes.back(), vEndTimecodes.back());
 
-        if (szLine.length() > 0) {
+        if (!szLine.empty()) {
             m_RealText.m_mapLines[pairTimecodes] = szLine;
         }
 
@@ -263,7 +263,7 @@ bool CRealTextParser::ExtractTextTag(wstring& p_rszLine, Tag& p_rTag)
 
 bool CRealTextParser::ExtractString(wstring& p_rszLine, wstring& p_rszString)
 {
-    if (p_rszLine.length() == 0 || p_rszLine.at(0) == '<') {
+    if (p_rszLine.empty() || p_rszLine.at(0) == '<') {
         if (m_bTryToIgnoreErrors) {
             p_rszString = L"";
             return true;
@@ -502,7 +502,7 @@ wstring CRealTextParser::RenderTags(const list<Tag>& p_crlTags)
                             continue;
                         }
 
-                        if (i->first == L"size" && i->second.length() > 0 && ::iswdigit(i->second.at(0))) {
+                        if (i->first == L"size" && !i->second.empty() && ::iswdigit(i->second.at(0))) {
                             int iSize = ::_wtoi(i->second.c_str());
 
                             if (iSize > 0 && iSize < m_iMinFontSize) {

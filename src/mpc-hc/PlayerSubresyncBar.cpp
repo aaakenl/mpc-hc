@@ -29,7 +29,7 @@
 
 IMPLEMENT_DYNAMIC(CPlayerSubresyncBar, CPlayerBar)
 CPlayerSubresyncBar::CPlayerSubresyncBar()
-    : m_pSubLock(NULL)
+    : m_pSubLock(nullptr)
     , m_mode(0)
     , m_rt(0)
     , m_fUnlink(false)
@@ -287,7 +287,7 @@ void CPlayerSubresyncBar::UpdatePreview()
                     }
                 }
 
-                if (schk.GetCount() == 0) {
+                if (schk.IsEmpty()) {
                     for (; start < end; start++) {
                         m_sts[start].start = m_subtimes[start].orgstart;
                         m_sts[start].end = m_subtimes[start].orgend;
@@ -575,7 +575,7 @@ static bool ParseTime(CString str, int& ret, bool fWarn = true)
     TCHAR c;
 
     str.Trim();
-    if (str.GetLength() > 0 && str[0] == '-') {
+    if (!str.IsEmpty() && str[0] == '-') {
         sign = -1;
     }
 
@@ -839,12 +839,12 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
                     CMapStringToPtr actormap;
 
                     for (size_t i = 0, j = m_sts.GetCount(); i < j; i++) {
-                        actormap[m_sts[i].actor] = NULL;
+                        actormap[m_sts[i].actor] = nullptr;
                     }
 
                     actormap.RemoveKey(_T(""));
 
-                    if (actormap.GetCount() > 0) {
+                    if (!actormap.IsEmpty()) {
                         m.AppendMenu(MF_SEPARATOR);
 
                         int id = ACTORFIRST;
@@ -867,12 +867,12 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
                     CMapStringToPtr effectmap;
 
                     for (size_t i = 0, j = m_sts.GetCount(); i < j; i++) {
-                        effectmap[m_sts[i].effect] = NULL;
+                        effectmap[m_sts[i].effect] = nullptr;
                     }
 
                     effectmap.RemoveKey(_T(""));
 
-                    if (effectmap.GetCount() > 0) {
+                    if (!effectmap.IsEmpty()) {
                         m.AppendMenu(MF_SEPARATOR);
 
                         int id = EFFECTFIRST;
@@ -1301,7 +1301,7 @@ int CPlayerSubresyncBar::FindNearestSub(__int64& rtPos, bool bForward)
 {
     int lCurTime = (int)(rtPos / 10000) + (bForward ? 1 : -1);
 
-    if (m_subtimes.GetCount() == 0) {
+    if (m_subtimes.IsEmpty()) {
         rtPos = max(0, rtPos + (bForward ? 1 : -1) * 50000000);
         return -2;
     }

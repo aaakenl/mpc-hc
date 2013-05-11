@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012 see Authors.txt
+ * (C) 2006-2013 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -163,9 +163,9 @@ BOOL CPPagePlayer::OnApply()
 
         // Empty the "Recent" jump list
         CComPtr<IApplicationDestinations> pDests;
-        HRESULT hr = pDests.CoCreateInstance(CLSID_ApplicationDestinations, NULL, CLSCTX_INPROC_SERVER);
+        HRESULT hr = pDests.CoCreateInstance(CLSID_ApplicationDestinations, nullptr, CLSCTX_INPROC_SERVER);
         if (SUCCEEDED(hr)) {
-            hr = pDests->RemoveAllDestinations();
+            pDests->RemoveAllDestinations();
         }
 
         // Ensure no new items are added in Windows recent menu and in the "Recent" jump list

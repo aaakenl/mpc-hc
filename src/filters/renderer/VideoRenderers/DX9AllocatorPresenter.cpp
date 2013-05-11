@@ -61,24 +61,23 @@ CDX9AllocatorPresenter::CDX9AllocatorPresenter(HWND hWnd, bool bFullscreen, HRES
     , m_TextScale(1.0)
     , m_MainThreadId(0)
     , m_bNeedCheckSample(true)
-    , m_pDirectDraw(NULL)
+    , m_pDirectDraw(nullptr)
     , m_bIsFullscreen(bFullscreen)
     , m_Decoder(_T(""))
     , m_nFrameType(PICT_NONE)
 {
-    HINSTANCE       hDll;
-
     if (FAILED(hr)) {
         _Error += _T("ISubPicAllocatorPresenterImpl failed\n");
         return;
     }
 
-    m_pD3DXLoadSurfaceFromMemory  = NULL;
-    m_pD3DXLoadSurfaceFromSurface = NULL;
-    m_pD3DXCreateLine             = NULL;
-    m_pD3DXCreateFont             = NULL;
-    m_pD3DXCreateSprite           = NULL;
-    hDll                          = GetRenderersData()->GetD3X9Dll();
+    m_pD3DXLoadSurfaceFromMemory  = nullptr;
+    m_pD3DXLoadSurfaceFromSurface = nullptr;
+    m_pD3DXCreateLine             = nullptr;
+    m_pD3DXCreateFont             = nullptr;
+    m_pD3DXCreateSprite           = nullptr;
+    HINSTANCE hDll                = GetRenderersData()->GetD3X9Dll();
+
     if (hDll) {
         (FARPROC&)m_pD3DXLoadSurfaceFromMemory  = GetProcAddress(hDll, "D3DXLoadSurfaceFromMemory");
         (FARPROC&)m_pD3DXLoadSurfaceFromSurface = GetProcAddress(hDll, "D3DXLoadSurfaceFromSurface");
@@ -91,15 +90,15 @@ CDX9AllocatorPresenter::CDX9AllocatorPresenter(HWND hWnd, bool bFullscreen, HRES
         _Error += _T(" release or newer in order for MPC-HC to function properly.\n");
     }
 
-    m_pDwmIsCompositionEnabled = NULL;
-    m_pDwmEnableComposition = NULL;
+    m_pDwmIsCompositionEnabled = nullptr;
+    m_pDwmEnableComposition = nullptr;
     m_hDWMAPI = LoadLibrary(L"dwmapi.dll");
     if (m_hDWMAPI) {
         (FARPROC&)m_pDwmIsCompositionEnabled = GetProcAddress(m_hDWMAPI, "DwmIsCompositionEnabled");
         (FARPROC&)m_pDwmEnableComposition = GetProcAddress(m_hDWMAPI, "DwmEnableComposition");
     }
 
-    m_pDirect3DCreate9Ex = NULL;
+    m_pDirect3DCreate9Ex = nullptr;
     m_hD3D9 = LoadLibrary(L"d3d9.dll");
 #ifndef DISABLE_USING_D3D9EX
     if (m_hD3D9) {
@@ -138,9 +137,9 @@ CDX9AllocatorPresenter::CDX9AllocatorPresenter(HWND hWnd, bool bFullscreen, HRES
     m_DetectedScanlineTime = 0;
     m_DetectedScanlineTimePrim = 0;
     m_DetectedRefreshRate = 0;
-    CRenderersSettings& s = GetRenderersSettings();
+    const CRenderersSettings& r = GetRenderersSettings();
 
-    if (s.m_AdvRendSets.iVMRDisableDesktopComposition) {
+    if (r.m_AdvRendSets.iVMRDisableDesktopComposition) {
         m_bDesktopCompositionDisabled = true;
         if (m_pDwmEnableComposition) {
             m_pDwmEnableComposition(0);
@@ -172,22 +171,22 @@ CDX9AllocatorPresenter::~CDX9AllocatorPresenter()
         }
     }
 
-    m_pFont     = NULL;
-    m_pLine     = NULL;
-    m_pD3DDev   = NULL;
-    m_pD3DDevEx = NULL;
+    m_pFont     = nullptr;
+    m_pLine     = nullptr;
+    m_pD3DDev   = nullptr;
+    m_pD3DDevEx = nullptr;
 
     CleanupRenderingEngine();
 
-    m_pD3D   = NULL;
-    m_pD3DEx = NULL;
+    m_pD3D   = nullptr;
+    m_pD3DEx = nullptr;
     if (m_hDWMAPI) {
         FreeLibrary(m_hDWMAPI);
-        m_hDWMAPI = NULL;
+        m_hDWMAPI = nullptr;
     }
     if (m_hD3D9) {
         FreeLibrary(m_hD3D9);
-        m_hD3D9 = NULL;
+        m_hD3D9 = nullptr;
     }
 }
 
@@ -406,7 +405,7 @@ public:
 
 bool CDX9AllocatorPresenter::SettingsNeedResetDevice()
 {
-    CRenderersSettings& s = GetRenderersSettings();
+    CRenderersSettings& r = GetRenderersSettings();
     CRenderersSettings::CAdvRendererSettings& New = GetRenderersSettings().m_AdvRendSets;
     CRenderersSettings::CAdvRendererSettings& Current = m_LastRendererSettings;
 
@@ -440,15 +439,15 @@ bool CDX9AllocatorPresenter::SettingsNeedResetDevice()
         bRet = bRet || New.iEVRForceInputHighColorResolution != Current.iEVRForceInputHighColorResolution;
     }
 
-    m_LastRendererSettings = s.m_AdvRendSets;
+    m_LastRendererSettings = r.m_AdvRendSets;
 
     return bRet;
 }
 
 HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
 {
-    CRenderersSettings& s = GetRenderersSettings();
-    CRenderersData* renderersData = GetRenderersData();
+    const CRenderersSettings& r = GetRenderersSettings();
+    CRenderersData* rd = GetRenderersData();
 
     m_VBlankEndWait = 0;
     m_VBlankMin = 300000;
@@ -461,7 +460,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
     m_PresentWaitTimeMin = 3000000000;
     m_PresentWaitTimeMax = 0;
 
-    m_LastRendererSettings = s.m_AdvRendSets;
+    m_LastRendererSettings = r.m_AdvRendSets;
 
     m_VBlankEndPresent = -100000;
     m_VBlankStartMeasureTime = 0;
@@ -487,9 +486,9 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
     ZeroMemory(m_ClockChangeHistory, sizeof(m_ClockChangeHistory));
     m_ClockTimeChangeHistoryPos = 0;
 
-    m_pD3DDev = NULL;
-    m_pD3DDevEx = NULL;
-    m_pDirectDraw = NULL;
+    m_pD3DDev = nullptr;
+    m_pD3DDevEx = nullptr;
+    m_pDirectDraw = nullptr;
 
     CleanupRenderingEngine();
 
@@ -538,7 +537,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
 
     //#define ENABLE_DDRAWSYNC
 #ifdef ENABLE_DDRAWSYNC
-    hr = DirectDrawCreate(NULL, &m_pDirectDraw, NULL);
+    hr = DirectDrawCreate(nullptr, &m_pDirectDraw, nullptr);
     if (hr == S_OK) {
         hr = m_pDirectDraw->SetCooperativeLevel(m_hWnd, DDSCL_NORMAL);
     }
@@ -553,19 +552,19 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
     }
 
     m_bCompositionEnabled = !!bCompositionEnabled;
-    m_bAlternativeVSync = s.m_AdvRendSets.fVMR9AlterativeVSync;
+    m_bAlternativeVSync = r.m_AdvRendSets.fVMR9AlterativeVSync;
 
     // detect FP textures support
-    renderersData->m_bFP16Support = SUCCEEDED(m_pD3D->CheckDeviceFormat(m_CurrentAdapter, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DUSAGE_QUERY_FILTER, D3DRTYPE_VOLUMETEXTURE, D3DFMT_A32B32G32R32F));
+    rd->m_bFP16Support = SUCCEEDED(m_pD3D->CheckDeviceFormat(m_CurrentAdapter, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DUSAGE_QUERY_FILTER, D3DRTYPE_VOLUMETEXTURE, D3DFMT_A32B32G32R32F));
 
     // detect 10-bit textures support
-    renderersData->m_b10bitSupport = SUCCEEDED(m_pD3D->CheckDeviceFormat(m_CurrentAdapter, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A2R10G10B10));
+    rd->m_b10bitSupport = SUCCEEDED(m_pD3D->CheckDeviceFormat(m_CurrentAdapter, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DUSAGE_QUERY_FILTER, D3DRTYPE_TEXTURE, D3DFMT_A2R10G10B10));
 
     // set settings that depend on hardware feature support
-    m_bForceInputHighColorResolution = s.m_AdvRendSets.iEVRForceInputHighColorResolution && m_bIsEVR && renderersData->m_b10bitSupport;
-    m_bHighColorResolution = s.m_AdvRendSets.iEVRHighColorResolution && m_bIsEVR && renderersData->m_b10bitSupport;
-    m_bFullFloatingPointProcessing = s.m_AdvRendSets.iVMR9FullFloatingPointProcessing && renderersData->m_bFP16Support;
-    m_bHalfFloatingPointProcessing = s.m_AdvRendSets.iVMR9HalfFloatingPointProcessing && renderersData->m_bFP16Support && !m_bFullFloatingPointProcessing;
+    m_bForceInputHighColorResolution = r.m_AdvRendSets.iEVRForceInputHighColorResolution && m_bIsEVR && rd->m_b10bitSupport;
+    m_bHighColorResolution = r.m_AdvRendSets.iEVRHighColorResolution && m_bIsEVR && rd->m_b10bitSupport;
+    m_bFullFloatingPointProcessing = r.m_AdvRendSets.iVMR9FullFloatingPointProcessing && rd->m_bFP16Support;
+    m_bHalfFloatingPointProcessing = r.m_AdvRendSets.iVMR9HalfFloatingPointProcessing && rd->m_bFP16Support && !m_bFullFloatingPointProcessing;
 
     // set color formats
     if (m_bFullFloatingPointProcessing) {
@@ -596,12 +595,12 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
         // there's no Desktop composition to take care of alternative vSync in exclusive mode, alternative vSync is therefore unused
         pp.hDeviceWindow = m_hWnd;
         pp.Flags = D3DPRESENTFLAG_VIDEO;
-        if (s.m_AdvRendSets.iVMR9FullscreenGUISupport && !m_bHighColorResolution) {
+        if (r.m_AdvRendSets.iVMR9FullscreenGUISupport && !m_bHighColorResolution) {
             pp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
         }
         m_D3DDevExError = L"No m_pD3DEx";
         if (m_pD3DEx) {
-            m_pD3DEx->GetAdapterDisplayModeEx(m_CurrentAdapter, &DisplayMode, NULL);
+            m_pD3DEx->GetAdapterDisplayModeEx(m_CurrentAdapter, &DisplayMode, nullptr);
 
             DisplayMode.Format = pp.BackBufferFormat;
             m_ScreenSize.SetSize(DisplayMode.Width, DisplayMode.Height);
@@ -636,7 +635,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
             m_DisplayType = d3ddm.Format;
             m_BackbufferType = pp.BackBufferFormat;
         }
-        if (m_pD3DDev && s.m_AdvRendSets.iVMR9FullscreenGUISupport && !m_bHighColorResolution) {
+        if (m_pD3DDev && r.m_AdvRendSets.iVMR9FullscreenGUISupport && !m_bHighColorResolution) {
             m_pD3DDev->SetDialogBoxMode(true);
             //if (m_pD3DDev->SetDialogBoxMode(true) != S_OK)
             //  ExitProcess(0);
@@ -653,7 +652,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
         }
 
         if (m_pD3DEx) {
-            m_pD3DEx->GetAdapterDisplayModeEx(m_CurrentAdapter, &DisplayMode, NULL);
+            m_pD3DEx->GetAdapterDisplayModeEx(m_CurrentAdapter, &DisplayMode, nullptr);
             m_ScreenSize.SetSize(DisplayMode.Width, DisplayMode.Height);
             m_RefreshRate = DisplayMode.RefreshRate;
             pp.BackBufferWidth = m_ScreenSize.cx;
@@ -664,7 +663,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
             hr = m_pD3DEx->CreateDeviceEx(
                      m_CurrentAdapter, D3DDEVTYPE_HAL, m_hWnd,
                      GetVertexProcessing() | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED | D3DCREATE_ENABLE_PRESENTSTATS, //D3DCREATE_MANAGED
-                     &pp, NULL, &m_pD3DDevEx);
+                     &pp, nullptr, &m_pD3DDevEx);
             if (m_pD3DDevEx) {
                 m_pD3DDev = m_pD3DDevEx;
                 m_DisplayType = DisplayMode.Format;
@@ -785,7 +784,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
         m_pSubPicQueue->SetSubPicProvider(pSubPicProvider);
     }
 
-    m_pFont = NULL;
+    m_pFont = nullptr;
     if (m_pD3DXCreateFont) {
         int MinSize = 1600;
         int CurrentSize = min(m_ScreenSize.cx, MinSize);
@@ -806,14 +805,14 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
     }
 
 
-    m_pSprite = NULL;
+    m_pSprite = nullptr;
 
     if (m_pD3DXCreateSprite) {
         m_pD3DXCreateSprite(m_pD3DDev,                 // D3D device
                             &m_pSprite);
     }
 
-    m_pLine = NULL;
+    m_pLine = nullptr;
     if (m_pD3DXCreateLine) {
         m_pD3DXCreateLine(m_pD3DDev, &m_pLine);
     }
@@ -841,20 +840,20 @@ void CDX9AllocatorPresenter::DeleteSurfaces()
 
 UINT CDX9AllocatorPresenter::GetAdapter(IDirect3D9* pD3D, bool bGetAdapter)
 {
-    if (m_hWnd == NULL || pD3D == NULL) {
+    if (m_hWnd == nullptr || pD3D == nullptr) {
         return D3DADAPTER_DEFAULT;
     }
 
     m_D3D9Device = _T("");
 
-    CRenderersSettings& s = GetRenderersSettings();
-    if (bGetAdapter && (pD3D->GetAdapterCount() > 1) && (s.D3D9RenderDevice != _T(""))) {
+    const CRenderersSettings& r = GetRenderersSettings();
+    if (bGetAdapter && (pD3D->GetAdapterCount() > 1) && !r.D3D9RenderDevice.IsEmpty()) {
         TCHAR strGUID[50];
         D3DADAPTER_IDENTIFIER9 adapterIdentifier;
 
         for (UINT adp = 0, num_adp = pD3D->GetAdapterCount(); adp < num_adp; ++adp) {
             if (pD3D->GetAdapterIdentifier(adp, 0, &adapterIdentifier) == S_OK) {
-                if ((::StringFromGUID2(adapterIdentifier.DeviceIdentifier, strGUID, 50) > 0) && (s.D3D9RenderDevice == strGUID)) {
+                if ((::StringFromGUID2(adapterIdentifier.DeviceIdentifier, strGUID, 50) > 0) && (r.D3D9RenderDevice == strGUID)) {
                     m_D3D9Device = adapterIdentifier.Description;
                     return  adp;
                 }
@@ -863,7 +862,7 @@ UINT CDX9AllocatorPresenter::GetAdapter(IDirect3D9* pD3D, bool bGetAdapter)
     }
 
     HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
-    if (hMonitor == NULL) {
+    if (hMonitor == nullptr) {
         return D3DADAPTER_DEFAULT;
     }
 
@@ -1184,13 +1183,13 @@ bool CDX9AllocatorPresenter::WaitForVBlankRange(int& _RasterStart, int _RasterSi
 
 int CDX9AllocatorPresenter::GetVBlackPos()
 {
-    CRenderersSettings& s = GetRenderersSettings();
+    const CRenderersSettings& r = GetRenderersSettings();
     BOOL bCompositionEnabled = m_bCompositionEnabled;
 
     int WaitRange = max(m_ScreenSize.cy / 40, 5);
     if (!bCompositionEnabled) {
         if (m_bAlternativeVSync) {
-            return s.m_AdvRendSets.iVMR9VSyncOffset;
+            return r.m_AdvRendSets.iVMR9VSyncOffset;
         } else {
             int MinRange = max(min(int(0.005 * double(m_ScreenSize.cy) * GetRefreshRate() + 0.5), m_ScreenSize.cy / 3), 5); // 5  ms or max 33 % of Time
             int WaitFor = m_ScreenSize.cy - (MinRange + WaitRange);
@@ -1204,8 +1203,8 @@ int CDX9AllocatorPresenter::GetVBlackPos()
 
 bool CDX9AllocatorPresenter::WaitForVBlank(bool& _Waited, bool& _bTakenLock)
 {
-    CRenderersSettings& s = GetRenderersSettings();
-    if (!s.m_AdvRendSets.iVMR9VSync) {
+    const CRenderersSettings& r = GetRenderersSettings();
+    if (!r.m_AdvRendSets.iVMR9VSync) {
         _Waited = true;
         m_VBlankWaitTime = 0;
         m_VBlankLockTime = 0;
@@ -1224,12 +1223,12 @@ bool CDX9AllocatorPresenter::WaitForVBlank(bool& _Waited, bool& _bTakenLock)
             _Waited = WaitForVBlankRange(WaitFor, 0, false, true, true, _bTakenLock);
             return false;
         } else {
-            _Waited = WaitForVBlankRange(WaitFor, 0, false, s.m_AdvRendSets.iVMR9VSyncAccurate, true, _bTakenLock);
+            _Waited = WaitForVBlankRange(WaitFor, 0, false, r.m_AdvRendSets.iVMR9VSyncAccurate, true, _bTakenLock);
             return true;
         }
     } else {
-        // Instead we wait for VBlack after the present, this seems to fix the stuttering problem. It's also possible to fix by removing the Sleep above, but that isn't an option.
-        WaitForVBlankRange(WaitFor, 0, false, s.m_AdvRendSets.iVMR9VSyncAccurate, true, _bTakenLock);
+        // Instead we wait for VBlack after the present, this seems to fix the stuttering problem. It'r also possible to fix by removing the Sleep above, but that isn't an option.
+        WaitForVBlankRange(WaitFor, 0, false, r.m_AdvRendSets.iVMR9VSyncAccurate, true, _bTakenLock);
 
         return false;
     }
@@ -1265,7 +1264,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
         return false;
     }
 
-    CRenderersSettings& s = GetRenderersSettings();
+    const CRenderersSettings& r = GetRenderersSettings();
 
     //TRACE(_T("Thread: %d\n"), (LONG)((CRITICAL_SECTION &)m_RenderLock).OwningThread);
 
@@ -1304,7 +1303,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
 
     // Clear the backbuffer
     m_pD3DDev->SetRenderTarget(0, pBackBuffer);
-    hr = m_pD3DDev->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+    hr = m_pD3DDev->Clear(0, nullptr, D3DCLEAR_TARGET, 0, 1.0f, 0);
 
     CRect rSrcVid(CPoint(0, 0), GetVisibleVideoSize());
     CRect rDstVid(m_VideoRect);
@@ -1337,28 +1336,28 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
     if (m_VMR9AlphaBitmap.dwFlags & VMRBITMAP_UPDATE) {
         CAutoLock BitMapLock(&m_VMR9AlphaBitmapLock);
         CRect rcSrc(m_VMR9AlphaBitmap.rSrc);
-        m_pOSDTexture = NULL;
-        m_pOSDSurface = NULL;
+        m_pOSDTexture = nullptr;
+        m_pOSDSurface = nullptr;
         if ((m_VMR9AlphaBitmap.dwFlags & VMRBITMAP_DISABLE) == 0 && (BYTE*)m_VMR9AlphaBitmapData) {
-            if ((m_pD3DXLoadSurfaceFromMemory != NULL) &&
+            if ((m_pD3DXLoadSurfaceFromMemory != nullptr) &&
                     SUCCEEDED(hr = m_pD3DDev->CreateTexture(rcSrc.Width(), rcSrc.Height(), 1,
                                    D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-                                   D3DPOOL_DEFAULT, &m_pOSDTexture, NULL))) {
+                                   D3DPOOL_DEFAULT, &m_pOSDTexture, nullptr))) {
                 if (SUCCEEDED(hr = m_pOSDTexture->GetSurfaceLevel(0, &m_pOSDSurface))) {
                     hr = m_pD3DXLoadSurfaceFromMemory(m_pOSDSurface,
-                                                      NULL,
-                                                      NULL,
+                                                      nullptr,
+                                                      nullptr,
                                                       (BYTE*)m_VMR9AlphaBitmapData,
                                                       D3DFMT_A8R8G8B8,
                                                       m_VMR9AlphaBitmapWidthBytes,
-                                                      NULL,
+                                                      nullptr,
                                                       &m_VMR9AlphaBitmapRect,
                                                       D3DX_FILTER_NONE,
                                                       m_VMR9AlphaBitmap.clrSrcKey);
                 }
                 if (FAILED(hr)) {
-                    m_pOSDTexture = NULL;
-                    m_pOSDSurface = NULL;
+                    m_pOSDTexture = nullptr;
+                    m_pOSDSurface = nullptr;
                 }
             }
         }
@@ -1383,7 +1382,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
 
     BOOL bCompositionEnabled = m_bCompositionEnabled;
 
-    bool bDoVSyncInPresent = (!bCompositionEnabled && !m_bAlternativeVSync) || !s.m_AdvRendSets.iVMR9VSync;
+    bool bDoVSyncInPresent = (!bCompositionEnabled && !m_bAlternativeVSync) || !r.m_AdvRendSets.iVMR9VSync;
 
     LONGLONG PresentWaitTime = 0;
 
@@ -1394,13 +1393,13 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
         pEventQuery->Issue(D3DISSUE_END);
     }
 
-    if (s.m_AdvRendSets.iVMRFlushGPUBeforeVSync && pEventQuery) {
+    if (r.m_AdvRendSets.iVMRFlushGPUBeforeVSync && pEventQuery) {
         LONGLONG llPerf = pApp->GetPerfCounter();
         BOOL Data;
         //Sleep(5);
         LONGLONG FlushStartTime = pApp->GetPerfCounter();
         while (S_FALSE == pEventQuery->GetData(&Data, sizeof(Data), D3DGETDATA_FLUSH)) {
-            if (!s.m_AdvRendSets.iVMRFlushGPUWait) {
+            if (!r.m_AdvRendSets.iVMRFlushGPUWait) {
                 break;
             }
             Sleep(1);
@@ -1408,7 +1407,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
                 break;    // timeout after 50 ms
             }
         }
-        if (s.m_AdvRendSets.iVMRFlushGPUWait) {
+        if (r.m_AdvRendSets.iVMRFlushGPUWait) {
             m_WaitForGPUTime = pApp->GetPerfCounter() - llPerf;
         } else {
             m_WaitForGPUTime = 0;
@@ -1448,15 +1447,15 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
         LONGLONG llPerf = pApp->GetPerfCounter();
         if (m_pD3DDevEx) {
             if (m_bIsFullscreen) {
-                hr = m_pD3DDevEx->PresentEx(NULL, NULL, NULL, NULL, NULL);
+                hr = m_pD3DDevEx->PresentEx(nullptr, nullptr, nullptr, nullptr, 0);
             } else {
-                hr = m_pD3DDevEx->PresentEx(rSrcPri, rDstPri, NULL, NULL, NULL);
+                hr = m_pD3DDevEx->PresentEx(rSrcPri, rDstPri, nullptr, nullptr, 0);
             }
         } else {
             if (m_bIsFullscreen) {
-                hr = m_pD3DDev->Present(NULL, NULL, NULL, NULL);
+                hr = m_pD3DDev->Present(nullptr, nullptr, nullptr, nullptr);
             } else {
-                hr = m_pD3DDev->Present(rSrcPri, rDstPri, NULL, NULL);
+                hr = m_pD3DDev->Present(rSrcPri, rDstPri, nullptr, nullptr);
             }
         }
         // Issue an End event
@@ -1466,10 +1465,10 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
 
         BOOL Data;
 
-        if (s.m_AdvRendSets.iVMRFlushGPUAfterPresent && pEventQuery) {
+        if (r.m_AdvRendSets.iVMRFlushGPUAfterPresent && pEventQuery) {
             LONGLONG FlushStartTime = pApp->GetPerfCounter();
             while (S_FALSE == pEventQuery->GetData(&Data, sizeof(Data), D3DGETDATA_FLUSH)) {
-                if (!s.m_AdvRendSets.iVMRFlushGPUWait) {
+                if (!r.m_AdvRendSets.iVMRFlushGPUWait) {
                     break;
                 }
                 if (pApp->GetPerfCounter() - FlushStartTime > 500000) {
@@ -1561,7 +1560,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::Paint(bool fAll)
             }
         }
 
-        if (s.fResetDevice) {
+        if (r.fResetDevice) {
             LONGLONG time = GetRenderersData()->GetPerfCounter();
             if (time > m_LastAdapterCheck + 20000000) { // check every 2 sec.
                 m_LastAdapterCheck = time;
@@ -1644,7 +1643,7 @@ STDMETHODIMP_(bool) CDX9AllocatorPresenter::ResetDevice()
     if (FAILED(hr = CreateDevice(Error)) || FAILED(hr = AllocSurfaces())) {
         // TODO: We should probably pause player
 #ifdef _DEBUG
-        Error += GetWindowsErrorMessage(hr, NULL);
+        Error += GetWindowsErrorMessage(hr, nullptr);
         TRACE(_T("D3D Reset Error\n%ws\n\n"), Error.GetBuffer());
 #endif
         m_bDeviceResetRequested = false;
@@ -1735,8 +1734,8 @@ void CDX9AllocatorPresenter::ResetStats()
 
 void CDX9AllocatorPresenter::DrawStats()
 {
-    CRenderersSettings& s = GetRenderersSettings();
-    CRenderersData* pApp = GetRenderersData();
+    const CRenderersSettings& r = GetRenderersSettings();
+    const CRenderersData* pApp = GetRenderersData();
     int bDetailedStats = 2;
     switch (pApp->m_fDisplayStats) {
         case 1:
@@ -1796,11 +1795,11 @@ void CDX9AllocatorPresenter::DrawStats()
             if (m_bIsFullscreen) {
                 strText += "FS ";
             }
-            if (s.m_AdvRendSets.iVMR9FullscreenGUISupport) {
+            if (r.m_AdvRendSets.iVMR9FullscreenGUISupport) {
                 strText += "FSGui ";
             }
 
-            if (s.m_AdvRendSets.iVMRDisableDesktopComposition) {
+            if (r.m_AdvRendSets.iVMRDisableDesktopComposition) {
                 strText += "DisDC ";
             }
 
@@ -1808,28 +1807,28 @@ void CDX9AllocatorPresenter::DrawStats()
                 strText += "ColorMan ";
             }
 
-            if (s.m_AdvRendSets.iVMRFlushGPUBeforeVSync) {
+            if (r.m_AdvRendSets.iVMRFlushGPUBeforeVSync) {
                 strText += "GPUFlushBV ";
             }
-            if (s.m_AdvRendSets.iVMRFlushGPUAfterPresent) {
+            if (r.m_AdvRendSets.iVMRFlushGPUAfterPresent) {
                 strText += "GPUFlushAP ";
             }
 
-            if (s.m_AdvRendSets.iVMRFlushGPUWait) {
+            if (r.m_AdvRendSets.iVMRFlushGPUWait) {
                 strText += "GPUFlushWt ";
             }
 
-            if (s.m_AdvRendSets.iVMR9VSync) {
+            if (r.m_AdvRendSets.iVMR9VSync) {
                 strText += "VS ";
             }
-            if (s.m_AdvRendSets.fVMR9AlterativeVSync) {
+            if (r.m_AdvRendSets.fVMR9AlterativeVSync) {
                 strText += "AltVS ";
             }
-            if (s.m_AdvRendSets.iVMR9VSyncAccurate) {
+            if (r.m_AdvRendSets.iVMR9VSyncAccurate) {
                 strText += "AccVS ";
             }
-            if (s.m_AdvRendSets.iVMR9VSyncOffset) {
-                strText.AppendFormat(L"VSOfst(%d)", s.m_AdvRendSets.iVMR9VSyncOffset);
+            if (r.m_AdvRendSets.iVMR9VSyncOffset) {
+                strText.AppendFormat(L"VSOfst(%d)", r.m_AdvRendSets.iVMR9VSyncOffset);
             }
 
             if (m_bFullFloatingPointProcessing) {
@@ -1847,12 +1846,12 @@ void CDX9AllocatorPresenter::DrawStats()
                 if (m_bForceInputHighColorResolution) {
                     strText += "For10bitIn ";
                 }
-                if (s.m_AdvRendSets.iEVREnableFrameTimeCorrection) {
+                if (r.m_AdvRendSets.iEVREnableFrameTimeCorrection) {
                     strText += "FTC ";
                 }
-                if (s.m_AdvRendSets.iEVROutputRange == 0) {
+                if (r.m_AdvRendSets.iEVROutputRange == 0) {
                     strText += "0-255 ";
-                } else if (s.m_AdvRendSets.iEVROutputRange == 1) {
+                } else if (r.m_AdvRendSets.iEVROutputRange == 1) {
                     strText += "16-235 ";
                 }
             }
@@ -1936,7 +1935,7 @@ void CDX9AllocatorPresenter::DrawStats()
 
         BOOL bCompositionEnabled = m_bCompositionEnabled;
 
-        bool bDoVSyncInPresent = (!bCompositionEnabled && !m_bAlternativeVSync) || !s.m_AdvRendSets.iVMR9VSync;
+        bool bDoVSyncInPresent = (!bCompositionEnabled && !m_bAlternativeVSync) || !r.m_AdvRendSets.iVMR9VSync;
 
         if (bDetailedStats > 1 && bDoVSyncInPresent) {
             strText.Format(L"Present Wait : Wait %7.3f ms   Min %7.3f ms   Max %7.3f ms", (double(m_PresentWaitTime) / 10000.0), (double(m_PresentWaitTimeMin) / 10000.0), (double(m_PresentWaitTimeMax) / 10000.0));
@@ -2006,13 +2005,13 @@ void CDX9AllocatorPresenter::DrawStats()
             DrawText(rc, strText, 1);
             OffsetRect(&rc, 0, TextHeight);
 
-            if (m_D3D9Device != _T("")) {
+            if (!m_D3D9Device.IsEmpty()) {
                 strText = "Render device: " + m_D3D9Device;
                 DrawText(rc, strText, 1);
                 OffsetRect(&rc, 0, TextHeight);
             }
 
-            if (m_Decoder != _T("")) {
+            if (!m_Decoder.IsEmpty()) {
                 strText = "Decoder      : " + m_Decoder;
                 DrawText(rc, strText, 1);
                 OffsetRect(&rc, 0, TextHeight);
@@ -2119,26 +2118,26 @@ STDMETHODIMP CDX9AllocatorPresenter::GetDIB(BYTE* lpDib, DWORD* size)
     CComPtr<IDirect3DSurface9> pSurface;
     if (m_bFullFloatingPointProcessing || m_bHalfFloatingPointProcessing || m_bHighColorResolution) {
         CComPtr<IDirect3DSurface9> fSurface = m_pVideoSurface[m_nCurSurface];
-        if (FAILED(hr = m_pD3DDev->CreateOffscreenPlainSurface(desc.Width, desc.Height, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &fSurface, NULL))
-                || FAILED(hr = m_pD3DXLoadSurfaceFromSurface(fSurface, NULL, NULL, m_pVideoSurface[m_nCurSurface], NULL, NULL, D3DX_DEFAULT, 0))) {
+        if (FAILED(hr = m_pD3DDev->CreateOffscreenPlainSurface(desc.Width, desc.Height, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &fSurface, nullptr))
+                || FAILED(hr = m_pD3DXLoadSurfaceFromSurface(fSurface, nullptr, nullptr, m_pVideoSurface[m_nCurSurface], nullptr, nullptr, D3DX_DEFAULT, 0))) {
             return hr;
         }
         pSurface = fSurface;
-        if (FAILED(hr = pSurface->LockRect(&r, NULL, D3DLOCK_READONLY))) {
-            pSurface = NULL;
-            if (FAILED(hr = m_pD3DDev->CreateOffscreenPlainSurface(desc.Width, desc.Height, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &pSurface, NULL))
+        if (FAILED(hr = pSurface->LockRect(&r, nullptr, D3DLOCK_READONLY))) {
+            pSurface = nullptr;
+            if (FAILED(hr = m_pD3DDev->CreateOffscreenPlainSurface(desc.Width, desc.Height, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &pSurface, nullptr))
                     || FAILED(hr = m_pD3DDev->GetRenderTargetData(fSurface, pSurface))
-                    || FAILED(hr = pSurface->LockRect(&r, NULL, D3DLOCK_READONLY))) {
+                    || FAILED(hr = pSurface->LockRect(&r, nullptr, D3DLOCK_READONLY))) {
                 return hr;
             }
         }
     } else {
         pSurface = m_pVideoSurface[m_nCurSurface];
-        if (FAILED(hr = pSurface->LockRect(&r, NULL, D3DLOCK_READONLY))) {
-            pSurface = NULL;
-            if (FAILED(hr = m_pD3DDev->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &pSurface, NULL))
+        if (FAILED(hr = pSurface->LockRect(&r, nullptr, D3DLOCK_READONLY))) {
+            pSurface = nullptr;
+            if (FAILED(hr = m_pD3DDev->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &pSurface, nullptr))
                     || FAILED(hr = m_pD3DDev->GetRenderTargetData(m_pVideoSurface[m_nCurSurface], pSurface))
-                    || FAILED(hr = pSurface->LockRect(&r, NULL, D3DLOCK_READONLY))) {
+                    || FAILED(hr = pSurface->LockRect(&r, nullptr, D3DLOCK_READONLY))) {
                 return hr;
             }
         }

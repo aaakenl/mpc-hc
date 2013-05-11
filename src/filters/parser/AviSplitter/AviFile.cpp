@@ -49,11 +49,11 @@ HRESULT CAviFile::Init()
     Seek(0);
     HRESULT hr = Parse(0, GetLength());
     UNREFERENCED_PARAMETER(hr);
-    if (m_movis.GetCount() == 0) { // FAILED(hr) is allowed as long as there was a movi chunk found
+    if (m_movis.IsEmpty()) { // FAILED(hr) is allowed as long as there was a movi chunk found
         return E_FAIL;
     }
 
-    if (m_avih.dwStreams == 0 && m_strms.GetCount() > 0) {
+    if (m_avih.dwStreams == 0 && !m_strms.IsEmpty()) {
         m_avih.dwStreams = (DWORD)m_strms.GetCount();
     }
 
@@ -220,7 +220,7 @@ HRESULT CAviFile::Parse(DWORD parentid, __int64 end)
                     }
                     if (m_isamv) {
                         // First alway video, second always audio
-                        strm->strh.fccType = m_strms.GetCount() == 0 ? FCC('vids') : FCC('amva');
+                        strm->strh.fccType = m_strms.IsEmpty() ? FCC('vids') : FCC('amva');
                         strm->strh.dwRate  = m_avih.dwReserved[0] * 1000; // dwReserved[0] = fps!
                         strm->strh.dwScale = 1000;
                     }
@@ -258,14 +258,14 @@ HRESULT CAviFile::Parse(DWORD parentid, __int64 end)
                     if (!strm) {
                         strm.Attach(DEBUG_NEW strm_t());
                     }
-                    ASSERT(strm->indx == NULL);
+                    ASSERT(strm->indx == nullptr);
                     AVISUPERINDEX* pSuperIndex;
                     if (size < MAXDWORD - 8) {
                         // Fix buffer overrun vulnerability
                         try {
                             pSuperIndex = (AVISUPERINDEX*)DEBUG_NEW unsigned char [(size_t)(size + 8)];
                         } catch (CMemoryException* e) {
-                            pSuperIndex = NULL;
+                            pSuperIndex = nullptr;
                             e->Delete();
                         }
                         if (pSuperIndex) {
@@ -288,7 +288,7 @@ HRESULT CAviFile::Parse(DWORD parentid, __int64 end)
                     //if (S_OK != Read(m_vprp)) return E_FAIL;
                     break;
                 case FCC('idx1'):
-                    ASSERT(m_idx1 == NULL);
+                    ASSERT(m_idx1 == nullptr);
                     m_idx1.Attach((AVIOLDINDEX*)DEBUG_NEW BYTE[size + 8]);
                     m_idx1->fcc = FCC('idx1');
                     m_idx1->cb = size;
@@ -597,7 +597,7 @@ DWORD CAviFile::strm_t::GetFrame(REFERENCE_TIME rt)
 {
     DWORD frame;
 
-    if (strh.dwScale == 0 || rt <= 0 || cs.GetCount() == 0) {
+    if (strh.dwScale == 0 || rt <= 0 || cs.IsEmpty()) {
         frame = 0;
     } else if (strh.fccType == FCC('auds')) {
         WAVEFORMATEX* wfe = (WAVEFORMATEX*)strf.GetData();

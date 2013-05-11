@@ -365,7 +365,7 @@ bool CVobSubFile::Save(CString fn, int delay, SubFormat sf)
 {
     TrimExtension(fn);
 
-    CVobSubFile vsf(NULL);
+    CVobSubFile vsf(nullptr);
     if (!vsf.Copy(*this)) {
         return false;
     }
@@ -712,7 +712,7 @@ bool CVobSubFile::ReadIdx(CString fn, int& ver)
                 continue;
             }
 
-            if (delay < 0 && m_langs[id].subpos.GetCount() > 0) {
+            if (delay < 0 && !m_langs[id].subpos.IsEmpty()) {
                 __int64 ts = m_langs[id].subpos[m_langs[id].subpos.GetCount() - 1].start;
 
                 if (sb.start < ts) {
@@ -749,16 +749,17 @@ bool CVobSubFile::ReadSub(CString fn)
     return true;
 }
 
-// Do we really need MyProcessDataProc??
-static unsigned char* RARbuff = NULL;
+static unsigned char* RARbuff = nullptr;
 static unsigned int RARpos = 0;
 
-static int PASCAL MyProcessDataProc(unsigned char* Addr, int Size)
+static int CALLBACK MyCallbackProc(UINT msg, LPARAM UserData, LPARAM P1, LPARAM P2)
 {
-    ASSERT(RARbuff);
+    if (msg == UCM_PROCESSDATA) {
+        ASSERT(RARbuff);
 
-    memcpy(&RARbuff[RARpos], Addr, Size);
-    RARpos += Size;
+        memcpy(&RARbuff[RARpos], (char*)P1, (size_t)P2);
+        RARpos += (unsigned int)P2;
+    }
 
     return 1;
 }
@@ -775,62 +776,57 @@ bool CVobSubFile::ReadRar(CString fn)
         return false;
     }
 
-#endif /* USE_UNRAR_STATIC */
-
-#ifndef USE_UNRAR_STATIC
     RAROpenArchiveEx OpenArchiveEx = (RAROpenArchiveEx)GetProcAddress(h, "RAROpenArchiveEx");
     RARCloseArchive  CloseArchive  = (RARCloseArchive)GetProcAddress(h, "RARCloseArchive");
     RARReadHeaderEx  ReadHeaderEx  = (RARReadHeaderEx)GetProcAddress(h, "RARReadHeaderEx");
     RARProcessFile   ProcessFile   = (RARProcessFile)GetProcAddress(h, "RARProcessFile");
-    RARSetProcessDataProc SetProcessDataProc = (RARSetProcessDataProc)GetProcAddress(h, "RARSetProcessDataProc");
+    RARSetCallback   SetCallback   = (RARSetCallback)GetProcAddress(h, "RARSetCallback");
 
-    if (!(OpenArchiveEx && CloseArchive && ReadHeaderEx && ProcessFile && SetProcessDataProc)) {
+    if (!(OpenArchiveEx && CloseArchive && ReadHeaderEx && ProcessFile && SetCallback)) {
         FreeLibrary(h);
         return false;
     }
 
 #else
+
 #define OpenArchiveEx      RAROpenArchiveEx
 #define CloseArchive       RARCloseArchive
 #define ReadHeaderEx       RARReadHeaderEx
 #define ProcessFile        RARProcessFile
-#define SetProcessDataProc RARSetProcessDataProc
-#endif
-    // TODO: struct here is not needed
-    struct RAROpenArchiveDataEx ArchiveDataEx;
-    //RAROpenArchiveDataEx ArchiveDataEx = { 0 };
-    memset(&ArchiveDataEx, 0, sizeof(ArchiveDataEx));
-    // Are these filename conversions needed??
-    ArchiveDataEx.ArcNameW = (LPTSTR)(LPCTSTR)fn;
+#define SetCallback        RARSetCallback
+#endif /* USE_UNRAR_STATIC */
+
+    RAROpenArchiveDataEx OpenArchiveData;
+    memset(&OpenArchiveData, 0, sizeof(OpenArchiveData));
+
+    OpenArchiveData.ArcNameW = (LPTSTR)(LPCTSTR)fn;
     char fnA[MAX_PATH];
     size_t size;
     if (wcstombs_s(&size, fnA, fn, fn.GetLength())) {
         fnA[0] = 0;
     }
-    ArchiveDataEx.ArcName = fnA;
-    ArchiveDataEx.OpenMode = RAR_OM_EXTRACT;
-    ArchiveDataEx.CmtBuf = 0;
-    HANDLE hrar = OpenArchiveEx(&ArchiveDataEx);
-    if (!hrar) {
+    OpenArchiveData.ArcName = fnA;
+    OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
+    OpenArchiveData.CmtBuf = 0;
+    OpenArchiveData.Callback = MyCallbackProc;
+    HANDLE hArcData = OpenArchiveEx(&OpenArchiveData);
+    if (!hArcData) {
 #ifndef USE_UNRAR_STATIC
         FreeLibrary(h);
 #endif
         return false;
     }
 
-    SetProcessDataProc(hrar, MyProcessDataProc);
+    RARHeaderDataEx HeaderDataEx;
+    HeaderDataEx.CmtBuf = nullptr;
 
-    // TODO: struct here is not needed
-    struct RARHeaderDataEx HeaderDataEx;
-    HeaderDataEx.CmtBuf = NULL;
-
-    while (ReadHeaderEx(hrar, &HeaderDataEx) == 0) {
+    while (ReadHeaderEx(hArcData, &HeaderDataEx) == 0) {
         CString subfn(HeaderDataEx.FileNameW);
 
         if (!subfn.Right(4).CompareNoCase(_T(".sub"))) {
             CAutoVectorPtr<BYTE> buff;
             if (!buff.Allocate(HeaderDataEx.UnpSize)) {
-                CloseArchive(hrar);
+                CloseArchive(hArcData);
 #ifndef USE_UNRAR_STATIC
                 FreeLibrary(h);
 #endif
@@ -840,8 +836,8 @@ bool CVobSubFile::ReadRar(CString fn)
             RARbuff = buff;
             RARpos = 0;
 
-            if (ProcessFile(hrar, RAR_TEST, NULL, NULL)) {
-                CloseArchive(hrar);
+            if (ProcessFile(hArcData, RAR_TEST, nullptr, nullptr)) {
+                CloseArchive(hArcData);
 #ifndef USE_UNRAR_STATIC
                 FreeLibrary(h);
 #endif
@@ -854,16 +850,16 @@ bool CVobSubFile::ReadRar(CString fn)
             m_sub.Write(buff, HeaderDataEx.UnpSize);
             m_sub.SeekToBegin();
 
-            RARbuff = NULL;
+            RARbuff = nullptr;
             RARpos = 0;
 
             break;
         }
 
-        ProcessFile(hrar, RAR_SKIP, NULL, NULL);
+        ProcessFile(hArcData, RAR_SKIP, nullptr, nullptr);
     }
 
-    CloseArchive(hrar);
+    CloseArchive(hArcData);
 #ifndef USE_UNRAR_STATIC
     FreeLibrary(h);
 #endif
@@ -1116,7 +1112,7 @@ bool CVobSubFile::WriteSub(CString fn)
 
 BYTE* CVobSubFile::GetPacket(int idx, int& packetsize, int& datasize, int iLang)
 {
-    BYTE* ret = NULL;
+    BYTE* ret = nullptr;
 
     if (iLang < 0 || iLang >= 32) {
         iLang = m_iLang;
@@ -1171,7 +1167,7 @@ BYTE* CVobSubFile::GetPacket(int idx, int& packetsize, int& datasize, int iLang)
         }
 
         if (i != packetsize || sizeleft > 0) {
-            delete [] ret, ret = NULL;
+            delete [] ret, ret = nullptr;
         }
     } while (false);
 
@@ -1268,7 +1264,7 @@ int CVobSubFile::GetFrameIdxByTimeStamp(__int64 time)
 STDMETHODIMP CVobSubFile::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
     CheckPointer(ppv, E_POINTER);
-    *ppv = NULL;
+    *ppv = nullptr;
 
     return
         QI(IPersist)
@@ -1288,12 +1284,12 @@ STDMETHODIMP_(POSITION) CVobSubFile::GetStartPosition(REFERENCE_TIME rt, double 
     int i = GetFrameIdxByTimeStamp(rt);
 
     if (!GetFrame(i)) {
-        return NULL;
+        return nullptr;
     }
 
     if (rt >= (m_img.start + m_img.delay)) {
         if (!GetFrame(++i)) {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -1303,7 +1299,7 @@ STDMETHODIMP_(POSITION) CVobSubFile::GetStartPosition(REFERENCE_TIME rt, double 
 STDMETHODIMP_(POSITION) CVobSubFile::GetNext(POSITION pos)
 {
     int i = (int)pos;
-    return (GetFrame(i) ? (POSITION)(i + 1) : NULL);
+    return (GetFrame(i) ? (POSITION)(i + 1) : nullptr);
 }
 
 STDMETHODIMP_(REFERENCE_TIME) CVobSubFile::GetStart(POSITION pos, double fps)
@@ -1656,7 +1652,7 @@ HRESULT CVobSubSettings::Render(SubPicDesc& spd, RECT& bbox)
     GetDestrect(r, spd.w, spd.h);
     StretchBlt(spd, r, m_img);
     /*
-        CRenderedTextSubtitle rts(NULL);
+        CRenderedTextSubtitle rts(nullptr);
         rts.CreateDefaultStyle(DEFAULT_CHARSET);
         rts.m_dstScreenSize.SetSize(m_size.cx, m_size.cy);
         CStringW assstr;
@@ -1680,7 +1676,7 @@ static bool CompressFile(CString fn)
     if (h != INVALID_HANDLE_VALUE) {
         unsigned short us = COMPRESSION_FORMAT_DEFAULT;
         DWORD nBytesReturned;
-        b = DeviceIoControl(h, FSCTL_SET_COMPRESSION, (LPVOID)&us, 2, NULL, 0, (LPDWORD)&nBytesReturned, NULL);
+        b = DeviceIoControl(h, FSCTL_SET_COMPRESSION, (LPVOID)&us, 2, nullptr, 0, (LPDWORD)&nBytesReturned, nullptr);
         CloseHandle(h);
     }
 
@@ -2367,13 +2363,13 @@ void CVobSubStream::Open(CString name, BYTE* pData, int len)
         } else if (key == _T("fade in/out")) {
             _stscanf_s(value, _T("%d%, %d%"), &m_fadein, &m_fadeout);
         } else if (key == _T("time offset")) {
-            m_toff = _tcstol(value, NULL, 10);
+            m_toff = _tcstol(value, nullptr, 10);
         } else if (key == _T("forced subs")) {
             m_fOnlyShowForcedSubs = value == _T("1") || value == _T("ON");
         } else if (key == _T("palette")) {
             Explode(value, sl, ',', 16);
             for (size_t i = 0; i < 16 && sl.GetCount(); i++) {
-                *(DWORD*)&m_orgpal[i] = _tcstol(sl.RemoveHead(), NULL, 16);
+                *(DWORD*)&m_orgpal[i] = _tcstol(sl.RemoveHead(), nullptr, 16);
             }
         } else if (key == _T("custom colors")) {
             m_fCustomPal = Explode(value, sl, ',', 3) == _T("ON");
@@ -2392,7 +2388,7 @@ void CVobSubStream::Open(CString name, BYTE* pData, int len)
                 if (colors.RemoveHead() == _T("colors")) {
                     Explode(colors.RemoveHead(), colors, ',', 4);
                     for (size_t i = 0; i < 4 && colors.GetCount(); i++) {
-                        *(DWORD*)&m_cuspal[i] = _tcstol(colors.RemoveHead(), NULL, 16);
+                        *(DWORD*)&m_cuspal[i] = _tcstol(colors.RemoveHead(), nullptr, 16);
                     }
                 }
             }
@@ -2420,6 +2416,16 @@ void CVobSubStream::Add(REFERENCE_TIME tStart, REFERENCE_TIME tStop, BYTE* pData
         m_subpics.RemoveTail();
         m_img.iIdx = -1;
     }
+
+    // We can only render one subpicture at a time, thus if there is overlap
+    // we have to fix it. tStop = tStart seems to work.
+    if (m_subpics.GetCount() && m_subpics.GetTail()->tStop > p->tStart) {
+        TRACE(_T("[CVobSubStream::Add] Vobsub timestamp overlap detected! ")
+              _T("Subpicture #%d, StopTime %I64d > %I64d (Next StartTime), making them equal!\n"),
+              m_subpics.GetCount(), m_subpics.GetTail()->tStop, p->tStart);
+        m_subpics.GetTail()->tStop = p->tStart;
+    }
+
     m_subpics.AddTail(p);
 }
 
@@ -2433,7 +2439,7 @@ void CVobSubStream::RemoveAll()
 STDMETHODIMP CVobSubStream::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
     CheckPointer(ppv, E_POINTER);
-    *ppv = NULL;
+    *ppv = nullptr;
 
     return
         QI(IPersist)

@@ -420,8 +420,8 @@ public:
     bool            fAutoloadAudio;
     bool            fAutoloadSubtitles;
     bool            fBlockVSFilter;
-    int             nVolumeStep;
-    int             nSpeedStep;
+    UINT            nVolumeStep;
+    UINT            nSpeedStep;
 
     // DVD/OGM
     bool            fUseDVDPath;
@@ -477,8 +477,9 @@ public:
     // Audio Switcher
     bool            fEnableAudioSwitcher;
     bool            fAudioNormalize;
+    UINT            nAudioMaxNormFactor;
     bool            fAudioNormalizeRecover;
-    float           dAudioBoost_dB;
+    UINT            nAudioBoost;
     bool            fDownSampleTo441;
     bool            fAudioTimeShift;
     int             iAudioTimeShift;

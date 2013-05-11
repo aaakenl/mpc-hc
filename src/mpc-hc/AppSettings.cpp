@@ -36,10 +36,10 @@ CAppSettings::CAppSettings()
     , MRUDub(0, _T("Recent Dub List"), _T("Dub%d"), 20)
     , filePositions(AfxGetApp(), IDS_R_SETTINGS, MAX_FILE_POSITION)
     , dvdPositions(AfxGetApp(), IDS_R_SETTINGS, MAX_DVD_POSITION)
-    , hAccel(NULL)
+    , hAccel(nullptr)
     , nCmdlnWebServerPort(-1)
     , fShowDebugInfo(false)
-    , hMasterWnd(NULL)
+    , hMasterWnd(nullptr)
     , nCLSwitches(0)
     , iMonitor(0)
     , fMute(0)
@@ -56,6 +56,58 @@ CAppSettings::CAppSettings()
     , nUpdaterAutoCheck(-1)
     , nUpdaterDelay(7)
     , fShaderEditorWasOpened(false)
+    , fBDAUseOffset(0)
+    , iBDAOffset(166)
+    , fBDAIgnoreEncryptedChannels(0)
+    , nDVBLastChannel(1)
+    , fEnableAudioSwitcher(TRUE)
+    , fAudioNormalize(FALSE)
+    , fAudioNormalizeRecover(TRUE)
+    , fDownSampleTo441(0)
+    , fAudioTimeShift(0)
+    , iAudioTimeShift(0)
+    , fCustomChannelMapping(0)
+    , fOverridePlacement(0)
+    , nHorPos(50)
+    , nVerPos(90)
+    , nSubDelayInterval(500)
+    , fPrioritizeExternalSubtitles(TRUE)
+    , fDisableInternalSubtitles(FALSE)
+    , nJumpDistS(DEFAULT_JUMPDISTANCE_1)
+    , nJumpDistM(DEFAULT_JUMPDISTANCE_2)
+    , nJumpDistL(DEFAULT_JUMPDISTANCE_3)
+    , fFastSeek(FALSE)
+    , fShowChapters(TRUE)
+    , fLCDSupport(FALSE)
+    , iBrightness(0)
+    , iContrast(0)
+    , iHue(0)
+    , iSaturation(0)
+    , iCaptionMenuMode(MODE_SHOWCAPTIONMENU)
+    , fHideNavigation(0)
+    , nCS(CS_SEEKBAR | CS_TOOLBAR | CS_STATUSBAR)
+    , language(-1)
+    , fEnableSubtitles(TRUE)
+    , fUseDefaultSubtitlesStyle(FALSE)
+    , iDefaultVideoSize(DVS_FROMINSIDE)
+    , fKeepAspectRatio(TRUE)
+    , fCompMonDeskARDiff(FALSE)
+    , iOnTop(0)
+    , bFavRememberPos(TRUE)
+    , bFavRelativeDrive(FALSE)
+    , iThumbRows(4)
+    , iThumbCols(4)
+    , iThumbWidth(1024)
+    , fToggleShader(0)
+    , fToggleShaderScreenSpace(0)
+    , bShufflePlaylistItems(FALSE)
+    , bHidePlaylistFullScreen(FALSE)
+    , nLastWindowType(SIZE_RESTORED)
+    , nLastUsedPage(0)
+    , fLastFullScreen(0)
+    , fIntRealMedia(0)
+    , fEnableEDLEditor(false)
+    , bNotifySkype(FALSE)
 {
     // Internal source filter
 #if INTERNAL_SOURCEFILTER_CDDA
@@ -443,7 +495,7 @@ bool CAppSettings::IsD3DFullscreen() const
 CString CAppSettings::SelectedAudioRenderer() const
 {
     CString strResult;
-    if (AfxGetMyApp()->m_AudioRendererDisplayName_CL != _T("")) {
+    if (!AfxGetMyApp()->m_AudioRendererDisplayName_CL.IsEmpty()) {
         strResult = AfxGetMyApp()->m_AudioRendererDisplayName_CL;
     } else {
         strResult = AfxGetAppSettings().strAudioRendererDisplayName;
@@ -495,7 +547,7 @@ void CAppSettings::SaveSettings()
         str.Format(_T("%.3f,%.3f"), dZoomX, dZoomY);
         pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_PANSCANZOOM, str);
     } else {
-        pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_PANSCANZOOM, NULL);
+        pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_PANSCANZOOM, nullptr);
     }
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_SNAPTODESKTOPEDGES, fSnapToDesktopEdges);
     pApp->WriteProfileBinary(IDS_R_SETTINGS, IDS_RS_LASTWINDOWRECT, (BYTE*)&rcLastWindowPos, sizeof(rcLastWindowPos));
@@ -543,6 +595,7 @@ void CAppSettings::SaveSettings()
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_ALLOW_OVERRIDING_EXT_SPLITTER, bAllowOverridingExternalSplitterChoice);
     pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_SUBTITLEPATHS, strSubtitlePaths);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_USEDEFAULTSUBTITLESSTYLE, fUseDefaultSubtitlesStyle);
+
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_ENABLEAUDIOSWITCHER, fEnableAudioSwitcher);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_ENABLEAUDIOTIMESHIFT, fAudioTimeShift);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIOTIMESHIFT, iAudioTimeShift);
@@ -550,11 +603,9 @@ void CAppSettings::SaveSettings()
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_CUSTOMCHANNELMAPPING, fCustomChannelMapping);
     pApp->WriteProfileBinary(IDS_R_SETTINGS, IDS_RS_SPEAKERTOCHANNELMAPPING, (BYTE*)pSpeakerToChannelMap, sizeof(pSpeakerToChannelMap));
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIONORMALIZE, fAudioNormalize);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIOMAXNORMFACTOR, nAudioMaxNormFactor);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIONORMALIZERECOVER, fAudioNormalizeRecover);
-
-    CString strTemp;
-    strTemp.Format(_T("%.1f"), dAudioBoost_dB);
-    pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_AUDIOBOOST, strTemp);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIOBOOST, nAudioBoost);
 
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_SPEAKERCHANNELS, nSpeakerChannels);
 
@@ -607,7 +658,7 @@ void CAppSettings::SaveSettings()
     pApp->WriteProfileInt(IDS_R_CAPTURE, IDS_RS_COUNTRY,         iAnalogCountry);
 
     // Save digital capture settings (BDA)
-    pApp->WriteProfileString(IDS_R_DVB, NULL, NULL); // Ensure the section is cleared before saving the new settings
+    pApp->WriteProfileString(IDS_R_DVB, nullptr, nullptr); // Ensure the section is cleared before saving the new settings
 
     pApp->WriteProfileString(IDS_R_DVB, IDS_RS_BDA_NETWORKPROVIDER, strBDANetworkProvider);
     pApp->WriteProfileString(IDS_R_DVB, IDS_RS_BDA_TUNER, strBDATuner);
@@ -651,14 +702,14 @@ void CAppSettings::SaveSettings()
     //pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_QUICKTIMERENDERER, iQuickTimeRenderer);
     //pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_REALMEDIAFPS, *((DWORD*)&dRealMediaQuickTimeFPS));
 
-    pApp->WriteProfileString(IDS_R_SETTINGS _T("\\") IDS_RS_PNSPRESETS, NULL, NULL);
+    pApp->WriteProfileString(IDS_R_SETTINGS _T("\\") IDS_RS_PNSPRESETS, nullptr, nullptr);
     for (INT_PTR i = 0, j = m_pnspresets.GetCount(); i < j; i++) {
         CString str;
         str.Format(_T("Preset%Id"), i);
         pApp->WriteProfileString(IDS_R_SETTINGS _T("\\") IDS_RS_PNSPRESETS, str, m_pnspresets[i]);
     }
 
-    pApp->WriteProfileString(IDS_R_COMMANDS, NULL, NULL);
+    pApp->WriteProfileString(IDS_R_COMMANDS, nullptr, nullptr);
     pos = wmcmds.GetHeadPosition();
     for (int i = 0; pos;) {
         wmcmd& wc = wmcmds.GetNext(pos);
@@ -733,7 +784,7 @@ void CAppSettings::SaveSettings()
 
     if (fShaderEditorWasOpened) { // This is a large data block. Save it only when really necessary.
         // Erase the currently saved shaders
-        pApp->WriteProfileString(IDS_R_SHADERS, NULL, NULL);
+        pApp->WriteProfileString(IDS_R_SHADERS, nullptr, nullptr);
         pApp->WriteProfileInt(IDS_R_SHADERS, IDS_RS_SHADERS_INITIALIZED, 1);
 
         pos = m_shaders.GetHeadPosition();
@@ -788,7 +839,7 @@ void CAppSettings::LoadExternalFilters(CAutoPtrList<FilterOverride>& filters, LP
             f->name = pApp->GetProfileString(key, _T("Name"), _T(""));
             f->clsid = GUIDFromCString(pApp->GetProfileString(key, _T("CLSID"), _T("")));
         } else {
-            pApp->WriteProfileString(key, NULL, 0);
+            pApp->WriteProfileString(key, nullptr, 0);
             break;
         }
 
@@ -878,7 +929,7 @@ void CAppSettings::SaveExternalFilters(CAutoPtrList<FilterOverride>& filters, LP
         CString key;
         key.Format(_T("%s\\%04u"), baseKey, i);
         int j = pApp->GetProfileInt(key, _T("Enabled"), -1);
-        pApp->WriteProfileString(key, NULL, NULL);
+        pApp->WriteProfileString(key, nullptr, nullptr);
         if (j < 0) {
             break;
         }
@@ -931,7 +982,7 @@ void CAppSettings::LoadSettings()
     ASSERT(pApp);
 
     UINT  len;
-    BYTE* ptr = NULL;
+    BYTE* ptr = nullptr;
 
     if (fInitialized) {
         return;
@@ -1076,8 +1127,8 @@ void CAppSettings::LoadSettings()
     {
         CString temp = pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_SPLOGFONT, _T(""));
         subdefstyle <<= temp;
-        if (temp == _T("")) {
-            subdefstyle.relativeTo = 1;    //default "Position subtitles relative to the video frame" option is checked
+        if (temp.IsEmpty()) {
+            subdefstyle.relativeTo = 1; // default "Position subtitles relative to the video frame" option is checked
         }
     }
     fOverridePlacement = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_SPOVERRIDEPLACEMENT, FALSE);
@@ -1131,10 +1182,18 @@ void CAppSettings::LoadSettings()
     }
 
     fAudioNormalize = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIONORMALIZE, FALSE);
+    nAudioMaxNormFactor = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIOMAXNORMFACTOR, 400);
     fAudioNormalizeRecover = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIONORMALIZERECOVER, TRUE);
-    dAudioBoost_dB = (float)_tstof(pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_AUDIOBOOST, _T("0")));
-    if (dAudioBoost_dB < 0 || dAudioBoost_dB > 10) {
-        dAudioBoost_dB = 0;
+    nAudioBoost = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_AUDIOBOOST, -1);
+    if (nAudioBoost == UINT(-1)) { // Backward compatibility
+        double dAudioBoost_dB = _tstof(pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_AUDIOBOOST, _T("0")));
+        if (dAudioBoost_dB < 0 || dAudioBoost_dB > 10) {
+            dAudioBoost_dB = 0;
+        }
+        nAudioBoost = UINT(100 * pow(10.0, dAudioBoost_dB / 20.0) + 0.5) - 100;
+    }
+    if (nAudioBoost > 300) { // Max boost is 300%
+        nAudioBoost = 300;
     }
 
     nSpeakerChannels = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_SPEAKERCHANNELS, 2);
@@ -1273,7 +1332,7 @@ void CAppSettings::LoadSettings()
 
     CRegKey key;
     // grrrrr
-    // if (!SHGetSpecialFolderPath(NULL, MyPictures.GetBufferSetLength(MAX_PATH), CSIDL_MYPICTURES, TRUE)) MyPictures.Empty();
+    // if (!SHGetSpecialFolderPath(nullptr, MyPictures.GetBufferSetLength(MAX_PATH), CSIDL_MYPICTURES, TRUE)) MyPictures.Empty();
     // else MyPictures.ReleaseBuffer();
     if (ERROR_SUCCESS == key.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"), KEY_READ)) {
         ULONG len = MAX_PATH;
@@ -1642,7 +1701,7 @@ CString CAppSettings::ParseFileName(CString const& param)
 
     // Try to transform relative pathname into full pathname
     if (param.Find(_T(":")) < 0) {
-        fullPathName.ReleaseBuffer(GetFullPathName(param, MAX_PATH, fullPathName.GetBuffer(MAX_PATH), NULL));
+        fullPathName.ReleaseBuffer(GetFullPathName(param, MAX_PATH, fullPathName.GetBuffer(MAX_PATH), nullptr));
 
         if (!fullPathName.IsEmpty() && FileExists(fullPathName)) {
             return fullPathName;
@@ -1728,7 +1787,7 @@ void CAppSettings::ParseCommandLine(CAtlList<CString>& cmdln)
             } else if (sw == _T("iconsassoc")) {
                 nCLSwitches |= CLSW_ICONSASSOC;
             } else if (sw == _T("start") && pos) {
-                rtStart = 10000i64 * _tcstol(cmdln.GetNext(pos), NULL, 10);
+                rtStart = 10000i64 * _tcstol(cmdln.GetNext(pos), nullptr, 10);
                 nCLSwitches |= CLSW_STARTVALID;
             } else if (sw == _T("startpos") && pos) {
                 rtStart = 10000i64 * ConvertTimeToMSec(cmdln.GetNext(pos));
@@ -1765,12 +1824,12 @@ void CAppSettings::ParseCommandLine(CAtlList<CString>& cmdln)
                     }
                 }
             } else if (sw == _T("monitor") && pos) {
-                iMonitor = _tcstol(cmdln.GetNext(pos), NULL, 10);
+                iMonitor = _tcstol(cmdln.GetNext(pos), nullptr, 10);
                 nCLSwitches |= CLSW_MONITOR;
             } else if (sw == _T("pns") && pos) {
                 strPnSPreset = cmdln.GetNext(pos);
             } else if (sw == _T("webport") && pos) {
-                int tmpport = _tcstol(cmdln.GetNext(pos), NULL, 10);
+                int tmpport = _tcstol(cmdln.GetNext(pos), nullptr, 10);
                 if (tmpport >= 0 && tmpport <= 65535) {
                     nCmdlnWebServerPort = tmpport;
                 }
@@ -1814,7 +1873,7 @@ void CAppSettings::GetFav(favtype ft, CAtlList<CString>& sl) const
     for (int i = 0; ; i++) {
         CString s;
         s.Format(_T("Name%d"), i);
-        s = AfxGetApp()->GetProfileString(root, s, NULL);
+        s = AfxGetApp()->GetProfileString(root, s, nullptr);
         if (s.IsEmpty()) {
             break;
         }
@@ -1840,7 +1899,7 @@ void CAppSettings::SetFav(favtype ft, CAtlList<CString>& sl)
             return;
     }
 
-    AfxGetApp()->WriteProfileString(root, NULL, NULL);
+    AfxGetApp()->WriteProfileString(root, nullptr, nullptr);
 
     int i = 0;
     POSITION pos = sl.GetHeadPosition();
@@ -1872,7 +1931,7 @@ CDVBChannel* CAppSettings::FindChannelByPref(int nPrefNumber)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 // Settings::CRecentFileAndURLList
@@ -1888,8 +1947,8 @@ extern BOOL AFXAPI AfxComparePath(LPCTSTR lpszPath1, LPCTSTR lpszPath2);
 
 void CAppSettings::CRecentFileAndURLList::Add(LPCTSTR lpszPathName)
 {
-    ASSERT(m_arrNames != NULL);
-    ASSERT(lpszPathName != NULL);
+    ASSERT(m_arrNames != nullptr);
+    ASSERT(lpszPathName != nullptr);
     ASSERT(AfxIsValidString(lpszPathName));
 
     if (CString(lpszPathName).MakeLower().Find(_T("@device:")) >= 0) {
