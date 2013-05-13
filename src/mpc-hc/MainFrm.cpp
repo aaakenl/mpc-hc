@@ -2167,6 +2167,14 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
             KillTimer(TIMER_DVBINFO_UPDATER);
             ShowCurrentChannelInfo(false, false);
             break;
+
+		case TIMER_MOUSEHIDER:
+			KillTimer(TIMER_MOUSEHIDER);
+			if(m_iMediaLoadState == MLS_LOADED){
+				m_fHideCursor = true;
+				SetCursor(NULL);
+			}
+			break;
     }
 
     __super::OnTimer(nIDEvent);
@@ -3019,6 +3027,14 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
                 SetTimer(TIMER_FULLSCREENMOUSEHIDER, max(nTimeOut * 1000, 2000), nullptr);
             }
         }
+
+		if ((abs(diff.cx) + abs(diff.cy)) >= 1)
+		{
+			m_fHideCursor = false;
+			SetCursor(LoadCursor(NULL, IDC_ARROW));
+			KillTimer(TIMER_MOUSEHIDER);
+			SetTimer(TIMER_MOUSEHIDER, 1500, NULL);
+		}
 
         m_lastMouseMove = point;
 
