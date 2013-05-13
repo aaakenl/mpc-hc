@@ -187,10 +187,11 @@ struct lang_type {
 
 int find_lang(unsigned short id)
 {
-    int mid, lo = 0, hi = _countof(lang_tbl) - 1;
+    int lo = 0, hi = _countof(lang_tbl) - 1;
 
     while (lo < hi) {
-        mid = (lo + hi) >> 1;
+        int mid = (lo + hi) >> 1;
+
         if (id < lang_tbl[mid].id) {
             hi = mid;
         } else if (id > lang_tbl[mid].id) {
@@ -373,16 +374,12 @@ bool CVobSubFile::Save(CString fn, int delay, SubFormat sf)
     switch (sf) {
         case VobSub:
             return vsf.SaveVobSub(fn, delay);
-            break;
         case WinSubMux:
             return vsf.SaveWinSubMux(fn, delay);
-            break;
         case Scenarist:
             return vsf.SaveScenarist(fn, delay);
-            break;
         case Maestro:
             return vsf.SaveMaestro(fn, delay);
-            break;
         default:
             break;
     }
@@ -444,7 +441,7 @@ bool CVobSubFile::ReadIdx(CString fn, int& ver)
 
             int i = str.Find(buff);
             if (i >= 0) {
-                _stscanf_s(&s[i + _tcslen(buff)], _T("%d, %d (PTS: %d)"), &vobid, &cellid, &celltimestamp);
+                _stscanf_s(&s[i + _tcslen(buff)], _T("%d, %d (PTS: %I64d)"), &vobid, &cellid, &celltimestamp);
             }
 
             continue;
